@@ -27,7 +27,15 @@ import {
   Trash2,
   Edit2,
   MoreHorizontal,
-  SquarePen
+  SquarePen,
+  Search,
+  Puzzle,
+  Globe,
+  Bell,
+  CreditCard,
+  Keyboard,
+  FileQuestion,
+  Info
 } from 'lucide-react';
 
 // Custom CSS for animations and gradients
@@ -165,8 +173,8 @@ const Modal = ({ isOpen, onClose, title, children }) => {
       />
       
       {/* Content */}
-      <div className="bg-white rounded-3xl w-[90%] max-w-md p-6 shadow-2xl relative z-10 animate-modal transform top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-3xl w-[90%] max-w-md p-6 shadow-2xl relative z-10 animate-modal transform top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border border-gray-100">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-50">
           <h2 className="text-xl font-medium text-gray-800">{title}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X className="w-5 h-5 text-gray-500" />
@@ -180,55 +188,155 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-// Modal Contents
-const SettingsContent = () => (
-  <div className="space-y-4">
-    <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
-      <div className="flex items-center gap-3">
-        <Moon className="w-5 h-5 text-gray-600" />
-        <span className="text-gray-700">Dark theme</span>
+// Enhanced Modal Contents
+const SettingsContent = () => {
+  const [darkTheme, setDarkTheme] = useState(false);
+  
+  return (
+    <div className="space-y-2">
+      <div className="px-1 py-1">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Preferences</h3>
+        <div 
+          onClick={() => setDarkTheme(!darkTheme)}
+          className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            {darkTheme ? <Moon className="w-5 h-5 text-blue-600" /> : <Sun className="w-5 h-5 text-gray-600" />}
+            <span className="text-gray-700">Dark theme</span>
+          </div>
+          <div className={`w-10 h-6 rounded-full relative transition-colors ${darkTheme ? 'bg-blue-600' : 'bg-gray-200'}`}>
+            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${darkTheme ? 'left-5' : 'left-1'}`} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <Puzzle className="w-5 h-5 text-gray-600" />
+            <span className="text-gray-700">Extensions</span>
+          </div>
+          <ExternalLink className="w-4 h-4 text-gray-400" />
+        </div>
+
+        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <Globe className="w-5 h-5 text-gray-600" />
+            <span className="text-gray-700">Language</span>
+          </div>
+          <span className="text-sm text-gray-400">English (US)</span>
+        </div>
       </div>
-      <div className="w-10 h-6 bg-gray-200 rounded-full relative">
-        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform" />
+
+      <div className="border-t border-gray-100 my-2"></div>
+
+      <div className="px-1 py-1">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Account</h3>
+        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <Shield className="w-5 h-5 text-gray-600" />
+            <span className="text-gray-700">Public links</span>
+          </div>
+          <ExternalLink className="w-4 h-4 text-gray-400" />
+        </div>
+        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <CreditCard className="w-5 h-5 text-gray-600" />
+            <span className="text-gray-700">Subscription</span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+          <div className="flex items-center gap-3">
+            <Bell className="w-5 h-5 text-gray-600" />
+            <span className="text-gray-700">Notifications</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
-      <div className="flex items-center gap-3">
-        <Shield className="w-5 h-5 text-gray-600" />
-        <span className="text-gray-700">Your public links</span>
-      </div>
-      <ExternalLink className="w-4 h-4 text-gray-400" />
-    </div>
-  </div>
-);
+  );
+};
 
 const ActivityContent = () => (
   <div className="space-y-4">
-    <p className="text-sm text-gray-500 mb-2">Today</p>
-    {[
-      "Explain React Hooks",
-      "Draft an email to boss",
-      "Python script for data analysis"
-    ].map((item, i) => (
-      <div key={i} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
-        <MessageSquare className="w-4 h-4 text-gray-400 mt-1" />
-        <div>
-          <p className="text-sm text-gray-800">{item}</p>
-          <p className="text-xs text-gray-400 mt-0.5">10:2{i} AM • Web</p>
-        </div>
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <input 
+        type="text" 
+        placeholder="Search your activity" 
+        className="w-full bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+      />
+    </div>
+
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Today</p>
+        <button className="text-xs text-blue-600 hover:underline">Clear day</button>
       </div>
-    ))}
+      {[
+        { title: "Explain React Hooks", time: "10:42 AM" },
+        { title: "Draft an email to boss", time: "09:15 AM" }
+      ].map((item, i) => (
+        <div key={i} className="group flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+          <MessageSquare className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-800 truncate">{item.title}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{item.time} • Web</p>
+          </div>
+          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-all">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ))}
+    </div>
+
+    <div>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Yesterday</p>
+      {[
+        { title: "Python script for data analysis", time: "4:20 PM" },
+        { title: "Best sushi restaurants in Tokyo", time: "1:30 PM" }
+      ].map((item, i) => (
+        <div key={i} className="group flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+          <MessageSquare className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-gray-800 truncate">{item.title}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{item.time} • Mobile</p>
+          </div>
+          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-all">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ))}
+    </div>
   </div>
 );
 
 const HelpContent = () => (
   <div className="space-y-2">
-    {["Help Center", "Updates", "Send feedback"].map((item, i) => (
-      <div key={i} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
-        <span className="text-gray-700">{item}</span>
-        <ExternalLink className="w-4 h-4 text-gray-400" />
+    <div className="p-4 bg-blue-50 rounded-2xl mb-4">
+      <h4 className="font-medium text-blue-800 mb-1">Gemini Advanced</h4>
+      <p className="text-xs text-blue-600 mb-3">Get our most capable AI models and priority access to new features.</p>
+      <button className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium hover:bg-blue-700 transition-colors">
+        Upgrade now
+      </button>
+    </div>
+
+    {[
+      { icon: HelpCircle, text: "Help Center" },
+      { icon: Sparkles, text: "Updates & FAQ" },
+      { icon: Keyboard, text: "Keyboard shortcuts" },
+      { icon: FileQuestion, text: "Send feedback" },
+      { icon: Info, text: "Privacy & Terms" }
+    ].map((item, i) => (
+      <div key={i} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer group">
+        <div className="flex items-center gap-3">
+          <item.icon className="w-5 h-5 text-gray-500 group-hover:text-gray-700" />
+          <span className="text-gray-700 group-hover:text-gray-900">{item.text}</span>
+        </div>
+        <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-gray-400" />
       </div>
     ))}
+    
+    <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+      <p className="text-xs text-gray-400">Version 2024.05.15</p>
+    </div>
   </div>
 );
 
@@ -267,7 +375,6 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
 
   return (
     <div 
-      // Updated: Added conditional z-index to fix overlapping menu issue
       className={`relative group animate-slide-in-left ${showMenu ? 'z-50' : 'z-auto'}`}
       style={{ animationDelay: `${(index + 1) * 50}ms` }}
     >
@@ -369,9 +476,14 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
         ${isOpen ? 'lg:w-64 lg:opacity-100' : 'lg:w-0 lg:opacity-0 lg:overflow-hidden'}
       `}
     >
-      {/* Inner container to maintain width while sidebar shrinks (prevents content squishing) */}
-      {/* Updated: Added transition-opacity and conditional opacity based on isOpen */}
-      <div className={`w-72 lg:w-64 flex flex-col h-full min-w-[16rem] transition-opacity duration-300 ${isOpen ? 'opacity-100 delay-100' : 'opacity-0'}`}>
+      {/* Inner container with NEW POP Animation on Open */}
+      <div 
+        className={`
+          w-72 lg:w-64 flex flex-col h-full min-w-[16rem] 
+          transition-all duration-500 ease-out
+          ${isOpen ? 'opacity-100 translate-x-0 scale-100 delay-100' : 'opacity-0 -translate-x-4 scale-95'}
+        `}
+      >
         <div className="p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
             <Menu className="w-5 h-5 text-gray-600" />
