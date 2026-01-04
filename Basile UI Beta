@@ -38,7 +38,8 @@ import {
   ChevronDown,
   Terminal,
   CheckSquare,
-  Square
+  Square,
+  Sigma // Added Sigma for math icon
 } from 'lucide-react';
 
 // Custom CSS for animations and gradients
@@ -180,9 +181,9 @@ const customStyles = `
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
   }
 
-  /* MODIFIED: Header glass is now more transparent */
+  /* Header glass is now more transparent */
   .glass-header {
-    background: rgba(255, 255, 255, 0.5); /* Changed from 0.85 to 0.5 */
+    background: rgba(255, 255, 255, 0.5); 
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
@@ -322,28 +323,50 @@ const useExternalLib = () => {
         document.head.appendChild(link);
       }
     };
+
     const loadScript = (src) => {
-      if (!document.querySelector(`script[src="${src}"]`)) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+          resolve(); // Already loaded or loading
+          return;
+        }
         const script = document.createElement('script');
         script.src = src;
         script.async = true;
+        script.onload = resolve;
+        script.onerror = reject;
         document.body.appendChild(script);
+      });
+    };
+
+    const init = async () => {
+      // Styles
+      loadStyle('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css');
+      loadStyle('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css');
+
+      // Scripts - Sequence is important to prevent "Script error" (Race conditions)
+      try {
+        // 1. Load Core libs first
+        await Promise.all([
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'),
+          loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js')
+        ]);
+
+        // 2. Load Prism languages after core is ready
+        await Promise.all([
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js')
+        ]);
+      } catch (e) {
+        console.error("Failed to load external libraries", e);
       }
     };
 
-    // PrismJS for Syntax Highlighting
-    loadStyle('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js');
-
-    // KaTeX for Math
-    loadStyle('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css');
-    loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js');
+    init();
   }, []);
 };
 
@@ -420,8 +443,24 @@ const CodeCanvas = ({ language, code }) => {
   const codeRef = useRef(null);
   
   useEffect(() => {
-    if (window.Prism && codeRef.current) {
-      window.Prism.highlightElement(codeRef.current);
+    // Retry mechanism for Prism loading
+    const highlight = () => {
+      if (window.Prism && codeRef.current) {
+        window.Prism.highlightElement(codeRef.current);
+      }
+    };
+
+    if (window.Prism) {
+      highlight();
+    } else {
+      // Poll every 500ms for up to 5 seconds if script loads late
+      const interval = setInterval(() => {
+        if (window.Prism) {
+          highlight();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
     }
   }, [code, language]);
 
@@ -455,15 +494,17 @@ const CodeCanvas = ({ language, code }) => {
           )}
         </button>
       </div>
-      {/* MODIFIED: Improved code block layout */}
-      <div className="p-5 bg-[#2d2d2d] overflow-x-auto">
-        <code 
-          ref={codeRef} 
-          className={`text-sm font-mono leading-relaxed text-gray-200 whitespace-pre language-${language || 'text'}`}
-          style={{ fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }}
-        >
-          {code}
-        </code>
+      {/* MODIFIED: Use standard PRE tag for proper Prism layout and highlighting */}
+      <div className="bg-[#2d2d2d] overflow-x-auto">
+        <pre className="!m-0 !p-5 !bg-transparent" style={{ margin: 0 }}>
+          <code 
+            ref={codeRef} 
+            className={`text-sm font-mono leading-relaxed text-gray-200 whitespace-pre language-${language || 'text'}`}
+            style={{ fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }}
+          >
+            {code}
+          </code>
+        </pre>
       </div>
     </div>
   );
@@ -525,13 +566,13 @@ const InputArea = ({
   isCentered = false, 
   fileInputRef, 
   handleFileUpload,
-  inputRef,
-  isListening,
-  toggleMic,
-  showModeMenu,
-  setShowModeMenu,
-  inputMode,
-  setInputMode,
+  inputRef, 
+  isListening, 
+  toggleMic, 
+  showModeMenu, 
+  setShowModeMenu, 
+  inputMode, 
+  setInputMode, 
   modeMenuRef,
   handleKeyDown
 }) => (
@@ -1512,7 +1553,7 @@ export default function App() {
                   <div className="flex flex-wrap gap-3 justify-center w-full max-w-4xl px-4">
                      {[
                         { text: 'Explain React Hooks', icon: Code },
-                        { text: 'Solve Quadratic Equation', icon: Function },
+                        { text: 'Solve Quadratic Equation', icon: Sigma },
                         { text: 'Write a Python Script', icon: Terminal },
                         { text: 'Plan a trip', icon: Sparkles }
                      ].map((item, i) => (
@@ -1523,6 +1564,7 @@ export default function App() {
                       >
                           {item.icon === Terminal ? <Terminal className="w-4 h-4 text-gray-500" /> : 
                            item.icon === Code ? <Code className="w-4 h-4 text-gray-500" /> :
+                           item.icon === Sigma ? <Sigma className="w-4 h-4 text-gray-500" /> :
                            <Sparkles className="w-4 h-4 text-gray-500" />}
                           <span>{item.text}</span>
                        </button>
