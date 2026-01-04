@@ -492,8 +492,8 @@ const InputArea = ({
             
             {showModeMenu && (
               <div className="absolute bottom-full left-0 mb-2 w-80 glass-menu rounded-2xl p-2 z-50 animate-pop shadow-xl flex flex-col">
-                <div className="px-4 py-2 border-b border-gray-100/50 mb-1">
-                  <span className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#4285F4] via-[#9B72CB] to-[#D96570]">Basile</span>
+                <div className="px-3 py-2 border-b border-gray-100/50 mb-1">
+                  <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#4285F4] via-[#9B72CB] to-[#D96570]">Basile</span>
                 </div>
                 {[
                   { id: 'Fast', desc: 'Answers quickly' },
@@ -936,9 +936,21 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
     if (!disliked) onShowToast("Thanks for the feedback!");
   };
 
-  // Helper function to render formatted content (Code blocks + Tables)
+  // Helper function to render formatted content (Code blocks + Tables + basic Markdown)
   const renderContent = (text) => {
     if (!text) return null;
+
+    // Helper to format inline bold
+    const formatInlineText = (txt) => {
+      // Simple splitter for **bold**
+      const parts = txt.split(/(\*\*.*?\*\*)/g);
+      return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      });
+    };
     
     // 1. Split by code blocks
     const parts = text.split(/(```[\s\S]*?```)/gm);
@@ -965,6 +977,7 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
       lines.forEach((line, lineIdx) => {
         const isTableLine = line.trim().startsWith('|') && line.trim().endsWith('|');
         const isSeparator = line.trim() === '---';
+        const isListItem = line.trim().startsWith('* ') || line.trim().startsWith('- ');
         
         if (isTableLine) {
           currentTableBuffer.push(line);
@@ -981,10 +994,20 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
           
           if (isSeparator) {
              elements.push(<div key={`${index}-hr-${lineIdx}`} className="h-px bg-gray-300/50 my-4" />);
-          } else if (line.trim() !== '') {
-            // Regular text line
+          } else if (isListItem) {
+            // Render list items
             elements.push(
-              <div key={`${index}-text-${lineIdx}`} className="whitespace-pre-wrap mb-1">{line}</div>
+              <div key={`${index}-li-${lineIdx}`} className="flex items-start gap-2 mb-1 ml-1">
+                <span className="text-gray-400 mt-1.5 text-[0.6rem]">•</span>
+                <div className="whitespace-pre-wrap flex-1">{formatInlineText(line.replace(/^[* -]\s+/, ''))}</div>
+              </div>
+            );
+          } else if (line.trim() !== '') {
+            // Regular text line with inline formatting
+            elements.push(
+              <div key={`${index}-text-${lineIdx}`} className="whitespace-pre-wrap mb-1">
+                {formatInlineText(line)}
+              </div>
             );
           }
         }
@@ -1012,13 +1035,11 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
         </div>
       </div>
       <div className="flex-1 space-y-2 min-w-0">
-        <div className="font-medium text-sm text-gray-900">Gemini</div>
+        <div className="font-medium text-sm text-gray-900">Basile</div>
         
         {/* Render Formatted Content */}
         <div className="prose prose-slate max-w-none text-[#1F1F1F] leading-7 fade-in-text">
           {renderContent(content)}
-          {/* REMOVED: Typing cursor/grey box as requested */}
-          {/* {isTyping && <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse"></span>} */}
         </div>
         
         {!isTyping && (
@@ -1079,13 +1100,28 @@ export default function App() {
     { id: 6, title: "Next.js vs Remix", pinned: false },
   ]);
 
+  // NEW: Ref to control scroll behavior
+  const scrollContainerRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const modeMenuRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (shouldAutoScrollRef.current) {
+       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      // If user is within 50px of the bottom, enable auto-scroll
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+      shouldAutoScrollRef.current = isAtBottom;
+    }
   };
 
   useEffect(() => {
@@ -1116,6 +1152,9 @@ export default function App() {
 
   const handleSend = async (text = input) => {
     if (!text.trim()) return;
+
+    // Force scroll to bottom when sending a new message
+    shouldAutoScrollRef.current = true;
 
     const userMsg = {
       id: Date.now(),
@@ -1342,7 +1381,12 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto relative no-scrollbar">
+        {/* Scroll Container with ref and onScroll listener */}
+        <div 
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto relative no-scrollbar"
+        >
           
           {/* Add key here to force re-render and trigger animation on conversation switch */}
           <div key={conversationId} className="h-full">
