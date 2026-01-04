@@ -189,6 +189,12 @@ const customStyles = `
     scrollbar-width: none;
   }
 
+  /* NEW: Scroll Mask for Fading Edges */
+  .scroll-mask {
+    mask-image: linear-gradient(to bottom, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+  }
+
   /* iOS 26 Glassmorphism Utilities */
   .glass {
     background: rgba(255, 255, 255, 0.45);
@@ -228,8 +234,8 @@ const customStyles = `
     -webkit-backdrop-filter: blur(12px) saturate(120%);
     border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
-    /* FIXED: Added base shadow for code blocks */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    /* FIXED: Deeper shadow for code blocks */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   }
   .glass-card:hover {
     background: rgba(255, 255, 255, 0.55);
@@ -242,8 +248,8 @@ const customStyles = `
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.6);
-    /* FIXED: Added stronger shadow for input box */
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+    /* FIXED: Deeper shadow for input box */
+    box-shadow: 0 10px 40px rgba(31, 38, 135, 0.12);
   }
 
   .glass-pill {
@@ -906,10 +912,11 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index, isActive 
           onClick={() => onLoad(chat.id, chat.title)}
           className={`w-full flex items-center justify-between px-4 py-2 rounded-full cursor-pointer transition-all duration-200 relative
             ${isActive 
-              ? 'bg-purple-100/30 shadow-sm border border-purple-100/50' // FIXED: Active state styling
+              ? 'bg-purple-200/60 shadow-md border border-purple-300/50' // FIXED: Deeper purple and shadow
               : 'hover:bg-white/40'
             }
           `}
+          style={isActive ? { boxShadow: '0 4px 12px rgba(147, 51, 234, 0.1)' } : {}}
         >
           <div className="flex items-center gap-2 overflow-hidden flex-1">
             <span className={`text-sm truncate ${isActive ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
@@ -1014,8 +1021,8 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 py-4 no-scrollbar">
-          {/* FIXED: Removed variable key to prevent flickering */}
-          <div key="recent-label" className={`text-xs font-medium text-gray-500 px-4 mb-2 ${isOpen ? 'animate-fade-in delay-200' : ''}`}>Recent</div>
+          {/* FIXED: Removed animation entirely to prevent flickering */}
+          <div className="text-xs font-medium text-gray-500 px-4 mb-2">Recent</div>
           <div className="space-y-1 pb-10">
             {sortedChats.map((chat, idx) => (
               <SidebarItem 
@@ -1575,7 +1582,8 @@ export default function App() {
           </div>
         </div>
 
-        <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto relative no-scrollbar">
+        {/* FIXED: Applied .scroll-mask class for fading edges effect */}
+        <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto relative no-scrollbar scroll-mask">
           <div key={conversationId} className="h-full">
             {messages.length === 0 ? (
                <div className="flex flex-col items-center justify-center h-full max-w-[800px] mx-auto px-4 animate-pop">
