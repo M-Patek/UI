@@ -492,8 +492,9 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
 
         <div className="px-4 py-2">
           <button 
+            key={isOpen ? 'newchat-open' : 'newchat-closed'}
             onClick={onNewChat}
-            className="w-full flex items-center space-x-3 bg-[#DDE3EA] hover:bg-[#D3E3FD] text-gray-700 hover:text-[#041E49] px-4 py-3 rounded-2xl transition-all duration-200 animate-pop delay-100 whitespace-nowrap"
+            className={`w-full flex items-center space-x-3 bg-[#DDE3EA] hover:bg-[#D3E3FD] text-gray-700 hover:text-[#041E49] px-4 py-3 rounded-2xl transition-all duration-200 whitespace-nowrap ${isOpen ? 'animate-pop delay-100' : ''}`}
           >
             <Plus className="w-5 h-5 shrink-0" />
             <span className="font-medium text-sm">New chat</span>
@@ -501,11 +502,11 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 py-4 no-scrollbar">
-          <div className="text-xs font-medium text-gray-500 px-4 mb-2 animate-fade-in delay-200">Recent</div>
+          <div key={`recent-label-${isOpen}`} className={`text-xs font-medium text-gray-500 px-4 mb-2 ${isOpen ? 'animate-fade-in delay-200' : ''}`}>Recent</div>
           <div className="space-y-1 pb-10">
             {sortedChats.map((chat, idx) => (
               <SidebarItem 
-                key={chat.id}
+                key={`${chat.id}-${isOpen}`}
                 index={idx}
                 chat={chat}
                 onLoad={onLoadRecent}
