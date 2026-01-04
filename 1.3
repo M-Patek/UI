@@ -7,7 +7,6 @@ import {
   Send, 
   Sparkles, 
   MoreVertical, 
-  History, 
   Settings, 
   HelpCircle,
   Code,
@@ -36,9 +35,10 @@ import {
   Keyboard,
   FileQuestion,
   Info,
-  Zap,
   ChevronDown,
-  Terminal
+  Terminal,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 
 // Custom CSS for animations and gradients
@@ -279,7 +279,65 @@ const customStyles = `
   .markdown-table tr:hover {
     background-color: rgba(255,255,255,0.4);
   }
+
+  /* Markdown & Latex Styles */
+  .markdown-blockquote {
+    border-left: 4px solid #4285F4;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #4b5563;
+    background: rgba(66, 133, 244, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 0 8px 8px 0;
+  }
+  
+  .task-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Katex Font Fixes if CDN fails */
+  .katex { font-size: 1.1em; }
 `;
+
+// Helper Hooks to load external scripts for Highlighting and Math
+const useExternalLib = () => {
+  useEffect(() => {
+    const loadStyle = (href) => {
+      if (!document.querySelector(`link[href="${href}"]`)) {
+        const link = document.createElement('link');
+        link.href = href;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
+    };
+    const loadScript = (src) => {
+      if (!document.querySelector(`script[src="${src}"]`)) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        document.body.appendChild(script);
+      }
+    };
+
+    // PrismJS for Syntax Highlighting
+    loadStyle('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js');
+
+    // KaTeX for Math
+    loadStyle('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css');
+    loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js');
+  }, []);
+};
 
 // Toast Notification Component
 const Toast = ({ message, onClose }) => {
@@ -298,19 +356,16 @@ const Toast = ({ message, onClose }) => {
   );
 };
 
-// Modal Component with Close Animation
+// Modal Component
 const Modal = ({ isOpen, onClose, title, children, isClosing }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      {/* Backdrop */}
       <div 
         className={`absolute inset-0 bg-black/10 backdrop-blur-sm ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
         onClick={onClose}
       />
-      
-      {/* Content */}
       <div className={`glass-darker rounded-[32px] w-[90%] max-w-md p-6 relative z-10 transform top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${isClosing ? 'animate-modal-out' : 'animate-modal'}`}>
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200/50">
           <h2 className="text-xl font-medium text-gray-800">{title}</h2>
@@ -326,10 +381,40 @@ const Modal = ({ isOpen, onClose, title, children, isClosing }) => {
   );
 };
 
-// NEW: Code Canvas Panel Component
+// Latex Renderer Component
+const LatexRenderer = ({ content, displayMode = false }) => {
+  const containerRef = useRef(null);
+  
+  useEffect(() => {
+    if (window.katex && containerRef.current) {
+      try {
+        window.katex.render(content, containerRef.current, {
+          displayMode: displayMode,
+          throwOnError: false
+        });
+      } catch (e) {
+        containerRef.current.innerText = content;
+      }
+    } else {
+       // Simple fallback if katex hasn't loaded yet
+       containerRef.current.innerText = content;
+    }
+  }, [content, displayMode]);
+
+  return <span ref={containerRef} className={displayMode ? "block my-4 text-center overflow-x-auto" : "inline-block mx-0.5"} />;
+};
+
+// Enhanced Code Canvas with Syntax Highlighting
 const CodeCanvas = ({ language, code }) => {
   const [copied, setCopied] = useState(false);
+  const codeRef = useRef(null);
   
+  useEffect(() => {
+    if (window.Prism && codeRef.current) {
+      window.Prism.highlightElement(codeRef.current);
+    }
+  }, [code, language]);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
@@ -360,8 +445,8 @@ const CodeCanvas = ({ language, code }) => {
           )}
         </button>
       </div>
-      <div className="p-4 bg-gray-50/50 overflow-x-auto">
-        <code className="text-sm font-mono text-gray-800 whitespace-pre">{code}</code>
+      <div className="p-4 bg-[#2d2d2d] overflow-x-auto">
+        <code ref={codeRef} className={`text-sm font-mono text-gray-200 whitespace-pre language-${language || 'text'}`}>{code}</code>
       </div>
     </div>
   );
@@ -372,14 +457,11 @@ const MarkdownTable = ({ content }) => {
   const rows = content.trim().split('\n').filter(row => row.trim() !== '');
   if (rows.length < 2) return <div className="whitespace-pre-wrap">{content}</div>;
 
-  // Header is the first row, separator is usually the second
   const headerRow = rows[0];
-  const separatorRow = rows[1];
   const bodyRows = rows.slice(2);
 
   const parseRow = (row) => {
     return row.split('|').filter((cell, index, arr) => {
-      // Remove first and last empty elements created by splitting |...|
       if (index === 0 && cell.trim() === '') return false;
       if (index === arr.length - 1 && cell.trim() === '') return false;
       return true;
@@ -387,8 +469,6 @@ const MarkdownTable = ({ content }) => {
   };
 
   const headers = parseRow(headerRow);
-  
-  // Verify it looks like a table (has |)
   if (!headerRow.includes('|')) return <div className="whitespace-pre-wrap">{content}</div>;
 
   return (
@@ -403,9 +483,9 @@ const MarkdownTable = ({ content }) => {
         </thead>
         <tbody>
           {bodyRows.map((row, i) => {
+            // Skip separator rows just in case
+            if (row.match(/^[\s|:-]+$/)) return null;
             const cells = parseRow(row);
-            // Skip separator rows if they ended up in body
-            if (row.includes('---')) return null;
             return (
               <tr key={i}>
                 {cells.map((cell, j) => (
@@ -420,7 +500,7 @@ const MarkdownTable = ({ content }) => {
   );
 };
 
-// Input Area Component - MOVED OUTSIDE APP TO FIX FOCUS ISSUES
+// Input Area Component
 const InputArea = ({ 
   input, 
   setInput, 
@@ -479,7 +559,6 @@ const InputArea = ({
         </button>
       ) : (
         <div className="flex items-center gap-2">
-          {/* Mode Selector - Left of Mic */}
           <div className="relative" ref={modeMenuRef}>
             <button 
               onClick={() => setShowModeMenu(!showModeMenu)}
@@ -531,7 +610,7 @@ const InputArea = ({
   </div>
 );
 
-// Enhanced Modal Contents
+// Settings Content
 const SettingsContent = () => {
   const [darkTheme, setDarkTheme] = useState(false);
   
@@ -683,7 +762,7 @@ const HelpContent = () => (
   </div>
 );
 
-// Individual Sidebar Chat Item Component
+// Sidebar Components
 const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(chat.title);
@@ -785,7 +864,6 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
 };
 
 const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, chatHistory, setChatHistory }) => {
-  
   const handlePin = (id) => {
     setChatHistory(prev => prev.map(chat => 
       chat.id === id ? { ...chat, pinned: !chat.pinned } : chat
@@ -802,7 +880,6 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
     ));
   };
 
-  // Sort: Pinned first
   const sortedChats = [...chatHistory].sort((a, b) => Number(b.pinned) - Number(a.pinned));
 
   return (
@@ -810,16 +887,12 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
       className={`
         fixed inset-y-0 left-0 z-50 glass-sidebar flex flex-col shadow-2xl 
         transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-        /* Mobile Behavior: Always 72 width, translate to hide/show */
         w-72 transform
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        
-        /* Desktop Behavior: Reset translate, animate width instead */
         lg:translate-x-0 lg:transform-none lg:shadow-none lg:relative
         ${isOpen ? 'lg:w-64 lg:opacity-100' : 'lg:w-0 lg:opacity-0 lg:overflow-hidden'}
       `}
     >
-      {/* Inner container with NEW POP Animation on Open */}
       <div 
         className={`
           w-72 lg:w-64 flex flex-col h-full min-w-[16rem] 
@@ -892,7 +965,6 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
   );
 };
 
-// Updated UserMessage with slide-in from left - Glassy Style
 const UserMessage = ({ content, delay = 0 }) => (
   <div 
     className="flex justify-end mb-8 animate-message-slide-in"
@@ -904,14 +976,13 @@ const UserMessage = ({ content, delay = 0 }) => (
   </div>
 );
 
-// Updated AIMessage with Canvas Parsing for Code Blocks AND Tables
+// Updated AIMessage with Robust Parser for MD, LaTeX, Code
 const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
 
   const handleCopy = () => {
     try {
-      // Create a textarea element to copy the content
       const textArea = document.createElement("textarea");
       textArea.value = content;
       document.body.appendChild(textArea);
@@ -936,27 +1007,15 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
     if (!disliked) onShowToast("Thanks for the feedback!");
   };
 
-  // Helper function to render formatted content (Code blocks + Tables + basic Markdown)
   const renderContent = (text) => {
     if (!text) return null;
 
-    // Helper to format inline bold
-    const formatInlineText = (txt) => {
-      // Simple splitter for **bold**
-      const parts = txt.split(/(\*\*.*?\*\*)/g);
-      return parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
-        }
-        return part;
-      });
-    };
-    
-    // 1. Split by code blocks
-    const parts = text.split(/(```[\s\S]*?```)/gm);
-    
+    // Split text into segments: Code Blocks -> Math Blocks -> Text
+    // This simple parser handles strict nesting: Code > Math > Text
+    const parts = text.split(/(```[\s\S]*?```|\$\$[\s\S]*?\$\$)/g);
+
     return parts.map((part, index) => {
-      // Handle Code Blocks
+      // 1. Code Blocks
       if (part.startsWith('```') && part.endsWith('```')) {
         const match = part.match(/^```(\w+)?\n([\s\S]*?)```$/);
         if (match) {
@@ -966,61 +1025,127 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
         }
       }
       
-      // Handle Text (detect tables inside text blocks)
-      // Check if text block contains table syntax (lines starting with |)
-      // Simple splitter for tables: groups contiguous lines starting with |
-      const lines = part.split('\n');
-      const elements = [];
-      let currentTableBuffer = [];
-      let inTable = false;
-
-      lines.forEach((line, lineIdx) => {
-        const isTableLine = line.trim().startsWith('|') && line.trim().endsWith('|');
-        const isSeparator = line.trim() === '---';
-        const isListItem = line.trim().startsWith('* ') || line.trim().startsWith('- ');
-        
-        if (isTableLine) {
-          currentTableBuffer.push(line);
-          inTable = true;
-        } else {
-          // If we were in a table, flush it
-          if (inTable && currentTableBuffer.length > 0) {
-            elements.push(
-              <MarkdownTable key={`${index}-table-${lineIdx}`} content={currentTableBuffer.join('\n')} />
-            );
-            currentTableBuffer = [];
-            inTable = false;
-          }
-          
-          if (isSeparator) {
-             elements.push(<div key={`${index}-hr-${lineIdx}`} className="h-px bg-gray-300/50 my-4" />);
-          } else if (isListItem) {
-            // Render list items
-            elements.push(
-              <div key={`${index}-li-${lineIdx}`} className="flex items-start gap-2 mb-1 ml-1">
-                <span className="text-gray-400 mt-1.5 text-[0.6rem]">•</span>
-                <div className="whitespace-pre-wrap flex-1">{formatInlineText(line.replace(/^[* -]\s+/, ''))}</div>
-              </div>
-            );
-          } else if (line.trim() !== '') {
-            // Regular text line with inline formatting
-            elements.push(
-              <div key={`${index}-text-${lineIdx}`} className="whitespace-pre-wrap mb-1">
-                {formatInlineText(line)}
-              </div>
-            );
-          }
-        }
-      });
-      
-      // Flush remaining table buffer if exists
-      if (currentTableBuffer.length > 0) {
-        elements.push(
-          <MarkdownTable key={`${index}-table-end`} content={currentTableBuffer.join('\n')} />
-        );
+      // 2. Math Blocks
+      if (part.startsWith('$$') && part.endsWith('$$')) {
+        const math = part.slice(2, -2);
+        return <LatexRenderer key={index} content={math} displayMode={true} />;
       }
 
-      return <div key={index}>{elements}</div>;
+      // 3. Process Regular Text (Inline Math, Markdown, etc.)
+      return renderTextSegment(part, index);
+    });
+  };
+
+  const renderTextSegment = (text, parentIndex) => {
+    // Split by lines to handle block elements like lists/headers
+    const lines = text.split('\n');
+    const elements = [];
+    let currentTableBuffer = [];
+    let inTable = false;
+
+    lines.forEach((line, lineIdx) => {
+      const isTableLine = line.trim().startsWith('|') && line.trim().endsWith('|');
+      const isSeparator = line.trim() === '---';
+      const isTaskList = line.trim().match(/^- \[(x| )\] (.*)$/);
+      const isHeader = line.trim().match(/^(#{1,6})\s(.*)$/);
+      const isBlockquote = line.trim().startsWith('> ');
+      const isBullet = line.trim().startsWith('* ') || line.trim().startsWith('- ');
+
+      // Table Handling
+      if (isTableLine) {
+        currentTableBuffer.push(line);
+        inTable = true;
+        return; // Skip rest of loop
+      } else if (inTable) {
+        // Flush table
+        elements.push(<MarkdownTable key={`${parentIndex}-table-${lineIdx}`} content={currentTableBuffer.join('\n')} />);
+        currentTableBuffer = [];
+        inTable = false;
+      }
+
+      const key = `${parentIndex}-${lineIdx}`;
+
+      if (isSeparator) {
+        elements.push(<div key={key} className="h-px bg-gray-300/50 my-4" />);
+      } else if (isTaskList) {
+        const checked = isTaskList[1] === 'x';
+        const content = isTaskList[2];
+        elements.push(
+          <div key={key} className="task-list-item text-gray-700">
+            <div className="mt-1">
+              {checked ? <CheckSquare className="w-4 h-4 text-blue-600" /> : <Square className="w-4 h-4 text-gray-400" />}
+            </div>
+            <div className="flex-1">{parseInline(content)}</div>
+          </div>
+        );
+      } else if (isHeader) {
+        const level = isHeader[1].length;
+        const content = isHeader[2];
+        const sizes = { 1: 'text-2xl', 2: 'text-xl', 3: 'text-lg', 4: 'text-base', 5: 'text-sm', 6: 'text-xs' };
+        elements.push(
+          <div key={key} className={`font-bold text-gray-800 mt-4 mb-2 ${sizes[level] || 'text-base'}`}>
+            {parseInline(content)}
+          </div>
+        );
+      } else if (isBlockquote) {
+        elements.push(
+          <div key={key} className="markdown-blockquote">
+            {parseInline(line.replace(/^> /, ''))}
+          </div>
+        );
+      } else if (isBullet) {
+        elements.push(
+          <div key={key} className="flex items-start gap-2 mb-1 ml-1">
+            <span className="text-gray-400 mt-1.5 text-[0.6rem]">•</span>
+            <div className="whitespace-pre-wrap flex-1">{parseInline(line.replace(/^[* -]\s+/, ''))}</div>
+          </div>
+        );
+      } else if (line.trim() !== '') {
+        elements.push(
+          <div key={key} className="whitespace-pre-wrap mb-1">
+            {parseInline(line)}
+          </div>
+        );
+      }
+    });
+
+    // Flush remaining table
+    if (currentTableBuffer.length > 0) {
+      elements.push(<MarkdownTable key={`${parentIndex}-table-end`} content={currentTableBuffer.join('\n')} />);
+    }
+
+    return <div key={`text-${parentIndex}`}>{elements}</div>;
+  };
+
+  // Helper to parse Inline Formatting (Bold, Italic, Code, Math, Link)
+  const parseInline = (text) => {
+    // Split by Math ($...$) -> Code (`...`) -> Link ([...](...)) -> Bold (**...**) -> Italic (*...*)
+    // Note: Regex split captures delimiters if grouped ()
+    const parts = text.split(/(\$[^$]+\$|`[^`]+`|\[.*?\]\(.*?\)|(\*\*|__).*?(\*\*|__)|\*.*?\*)/g);
+    
+    return parts.map((part, i) => {
+      if (!part) return null;
+
+      if (part.startsWith('$') && part.endsWith('$')) {
+        return <LatexRenderer key={i} content={part.slice(1, -1)} displayMode={false} />;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={i} className="bg-gray-100 text-red-500 px-1 rounded text-sm font-mono">{part.slice(1, -1)}</code>;
+      }
+      if (part.startsWith('[') && part.includes('](')) {
+        const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (match) {
+           return <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{match[1]}</a>;
+        }
+      }
+      if (part.startsWith('**') || part.startsWith('__')) {
+        return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*')) {
+        return <em key={i} className="italic text-gray-800">{part.slice(1, -1)}</em>;
+      }
+      
+      return part;
     });
   };
 
@@ -1037,7 +1162,6 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
       <div className="flex-1 space-y-2 min-w-0">
         <div className="font-medium text-sm text-gray-900">Basile</div>
         
-        {/* Render Formatted Content */}
         <div className="prose prose-slate max-w-none text-[#1F1F1F] leading-7 fade-in-text">
           {renderContent(content)}
         </div>
@@ -1047,7 +1171,6 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
             <button 
               onClick={handleLike}
               className={`p-1.5 hover:bg-white/50 rounded-full transition-colors ${liked ? 'text-blue-600' : 'text-gray-500'}`} 
-              title="Good response"
             >
               <ThumbsUp className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
             </button>
@@ -1060,15 +1183,11 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
             <button 
               onClick={handleCopy}
               className="p-1.5 hover:bg-white/50 rounded-full text-gray-500 transition-colors"
-              title="Copy"
             >
               <Copy className="w-4 h-4" />
             </button>
-            <button className="p-1.5 hover:bg-white/50 rounded-full text-gray-500 transition-colors" title="Regenerate">
-              <RotateCcw className="w-4 h-4" />
-            </button>
             <button className="p-1.5 hover:bg-white/50 rounded-full text-gray-500 transition-colors">
-              <MoreVertical className="w-4 h-4" />
+              <RotateCcw className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -1078,6 +1197,9 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
 };
 
 export default function App() {
+  // Load external scripts (Prism, Katex)
+  useExternalLib();
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -1090,7 +1212,6 @@ export default function App() {
   const [inputMode, setInputMode] = useState('Fast');
   const [showModeMenu, setShowModeMenu] = useState(false);
   
-  // Chat History State
   const [chatHistory, setChatHistory] = useState([
     { id: 1, title: "React UI Design Patterns", pinned: false },
     { id: 2, title: "Material 3 Specifications", pinned: true },
@@ -1100,10 +1221,8 @@ export default function App() {
     { id: 6, title: "Next.js vs Remix", pinned: false },
   ]);
 
-  // NEW: Ref to control scroll behavior
   const scrollContainerRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
-
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -1118,7 +1237,6 @@ export default function App() {
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-      // If user is within 50px of the bottom, enable auto-scroll
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
       shouldAutoScrollRef.current = isAtBottom;
     }
@@ -1147,13 +1265,12 @@ export default function App() {
     setTimeout(() => {
       setActiveModal(null);
       setIsModalClosing(false);
-    }, 200); // Wait for animation to finish
+    }, 200);
   };
 
   const handleSend = async (text = input) => {
     if (!text.trim()) return;
 
-    // Force scroll to bottom when sending a new message
     shouldAutoScrollRef.current = true;
 
     const userMsg = {
@@ -1166,17 +1283,13 @@ export default function App() {
     setInput('');
     setIsTyping(true);
 
-    // Call Gemini API
     try {
-      const apiKey = ""; // Will be injected by runtime
-      
-      // Prepare messages for context, mapping internal role to API role
+      const apiKey = "";
       const history = messages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'model',
         parts: [{ text: msg.content }]
       }));
 
-      // Add current message to the payload
       const apiContents = [
         ...history,
         { role: 'user', parts: [{ text: text }] }
@@ -1191,7 +1304,6 @@ export default function App() {
           },
           body: JSON.stringify({
             contents: apiContents,
-            // You can add system instructions here if needed
           })
         }
       );
@@ -1203,7 +1315,6 @@ export default function App() {
       const data = await response.json();
       const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
 
-      // Create an empty AI message first
       const aiMsgId = Date.now() + 1;
       const aiMsg = {
         id: aiMsgId,
@@ -1212,7 +1323,6 @@ export default function App() {
       };
       setMessages(prev => [...prev, aiMsg]);
 
-      // Stream the response (simulate typing)
       let i = 0;
       const streamInterval = setInterval(() => {
         if (i < aiResponseText.length) {
@@ -1226,13 +1336,12 @@ export default function App() {
           clearInterval(streamInterval);
           setIsTyping(false);
         }
-      }, 15); // Adjust typing speed here (ms per char)
+      }, 10);
 
     } catch (error) {
       console.error("Gemini API Error:", error);
       showToast("Error connecting to Gemini API");
       
-      // Add error message to chat for visibility
       const errorMsg = {
         id: Date.now() + 1,
         role: 'ai',
@@ -1254,16 +1363,16 @@ export default function App() {
     setMessages([]); 
     setIsTyping(false);
     setInput('');
-    setConversationId(Date.now()); // Trigger new animation
+    setConversationId(Date.now());
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
 
   const handleLoadRecent = (topic) => {
     setIsTyping(false);
-    setConversationId(Date.now()); // Trigger new animation
+    setConversationId(Date.now());
     setMessages([
-      { id: 1, role: 'user', content: `Tell me about ${topic}` },
-      { id: 2, role: 'ai', content: `Here is the retrieved information regarding **${topic}**. \n\n| Item | Status | Notes |\n|---|---|---|\n| Simplicity | ✅ | Keep it clean |\n| Spacing | ✅ | Consistent margins |\n\nDo you want to continue this conversation?` }
+      { id: 1, role: 'user', content: `Show me ${topic} features` },
+      { id: 2, role: 'ai', content: `Here is a demo of the new rendering capabilities:\n\n### 1. Math Formulas (LaTeX)\n\nInline: $E = mc^2$\nBlock:\n$$\n\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$\n\n### 2. Code with Highlighting\n\n\`\`\`python\ndef hello_world():\n    print("Hello from PrismJS!")\n    return True\n\`\`\`\n\n### 3. Task Lists\n\n- [x] Implement Markdown\n- [x] Add Syntax Highlighting\n- [ ] Create World Peace\n\n> "This is a blockquote to show off the styling."\n\nCheck the **source code** for implementation details!` }
     ]);
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
@@ -1284,28 +1393,10 @@ export default function App() {
       showToast("Listening...");
       setTimeout(() => {
         setIsListening(false);
-        setInput("How do I build a spaceship?");
+        setInput("Describe the theory of relativity using math.");
       }, 2000);
     } else {
       setIsListening(false);
-    }
-  };
-
-  const renderModalContent = () => {
-    switch (activeModal) {
-      case 'settings': return <SettingsContent />;
-      case 'activity': return <ActivityContent />;
-      case 'help': return <HelpContent />;
-      default: return null;
-    }
-  };
-
-  const getModalTitle = () => {
-    switch (activeModal) {
-      case 'settings': return 'Settings';
-      case 'activity': return 'Gemini Activity';
-      case 'help': return 'Help';
-      default: return '';
     }
   };
 
@@ -1313,7 +1404,6 @@ export default function App() {
     <div className="relative flex h-screen font-sans overflow-hidden text-[#1F1F1F] selection:bg-[#c2dbfe] selection:text-[#0b57d0] bg-[#F8F9FA]">
       <style>{customStyles}</style>
 
-      {/* Moved Blobs to global background so sidebar can be transparent */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
         <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
         <div className="absolute top-0 right-1/4 w-[800px] h-[800px] bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
@@ -1325,10 +1415,10 @@ export default function App() {
       <Modal 
         isOpen={!!activeModal} 
         onClose={handleCloseModal} 
-        title={getModalTitle()}
+        title={activeModal === 'settings' ? 'Settings' : activeModal === 'activity' ? 'Gemini Activity' : 'Help'}
         isClosing={isModalClosing}
       >
-        {renderModalContent()}
+        {activeModal === 'settings' ? <SettingsContent /> : activeModal === 'activity' ? <ActivityContent /> : <HelpContent />}
       </Modal>
 
       <Sidebar 
@@ -1342,57 +1432,35 @@ export default function App() {
       />
 
       <div className="flex-1 flex flex-col h-full relative z-10">
-        
-        {/* Header - Now using glass-header for better hierarchy/opacity */}
         <div className="flex items-center justify-between px-5 py-3 glass-header sticky top-0 z-20">
           <div className="flex items-center space-x-2">
-            {/* UPDATED: Smooth animation for Menu button appearance */}
-            <div 
-              className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${!isSidebarOpen ? 'w-10 opacity-100 mr-2' : 'w-0 opacity-0 mr-0'}`}
-            >
+            <div className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${!isSidebarOpen ? 'w-10 opacity-100 mr-2' : 'w-0 opacity-0 mr-0'}`}>
               <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-white/50 rounded-full transition-colors whitespace-nowrap">
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
             </div>
             
-            {/* NEW: Persistent New Chat Icon Button - Glassy */}
-            <button 
-              onClick={handleNewChat}
-              className="p-2 hover:bg-white/50 rounded-full transition-colors mr-2 text-gray-600"
-              title="New Chat"
-            >
+            <button onClick={handleNewChat} className="p-2 hover:bg-white/50 rounded-full transition-colors mr-2 text-gray-600" title="New Chat">
               <SquarePen className="w-5 h-5" />
             </button>
 
-            {/* MODIFIED: Replaced Gemini Advanced with Colorful Basile */}
             <button className="flex items-center space-x-1 text-lg font-medium text-gray-600 hover:bg-white/50 px-3 py-1.5 rounded-lg transition-colors">
               <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#4285F4] via-[#9B72CB] to-[#D96570]">Basile</span>
               <MoreVertical className="w-4 h-4 ml-1 text-gray-400" />
             </button>
           </div>
           <div className="flex items-center space-x-2">
-             <button 
-                onClick={() => setActiveModal('settings')}
-                className="p-2 hover:bg-white/50 rounded-full transition-colors hidden sm:block"
-             >
+             <button onClick={() => setActiveModal('settings')} className="p-2 hover:bg-white/50 rounded-full transition-colors hidden sm:block">
                 <Settings className="w-5 h-5 text-gray-600" />
              </button>
              <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-medium cursor-pointer hover:ring-4 hover:ring-purple-100 transition-all shadow-lg shadow-purple-200">U</div>
           </div>
         </div>
 
-        {/* Scroll Container with ref and onScroll listener */}
-        <div 
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto relative no-scrollbar"
-        >
-          
-          {/* Add key here to force re-render and trigger animation on conversation switch */}
+        <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto relative no-scrollbar">
           <div key={conversationId} className="h-full">
             {messages.length === 0 ? (
                <div className="flex flex-col items-center justify-center h-full max-w-[800px] mx-auto px-4 animate-pop">
-                  {/* Left Aligned Welcome Text above Center Input */}
                   <div className="w-full max-w-3xl mb-6">
                     <span className="text-3xl font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#4285F4] to-[#9B72CB] block text-left">
                       Hello, User
@@ -1402,11 +1470,7 @@ export default function App() {
                     </span>
                   </div>
 
-                  {/* Centered Input Box */}
                   <div className="w-full max-w-3xl mb-8">
-                     {/* MOVED OUTSIDE: We now pass props to InputArea instead of defining it inside App.
-                         This prevents re-renders from losing focus.
-                      */}
                     <InputArea 
                       input={input}
                       setInput={setInput}
@@ -1426,20 +1490,21 @@ export default function App() {
                     />
                   </div>
 
-                  {/* Pill Shaped Suggestions Below Input */}
                   <div className="flex flex-wrap gap-3 justify-center w-full max-w-4xl px-4">
                      {[
                         { text: 'Explain React Hooks', icon: Code },
-                        { text: 'Plan a trip to Japan', icon: Send },
-                        { text: 'Write a SQL Query', icon: Code },
-                        { text: 'Draft an email', icon: Sparkles }
+                        { text: 'Solve Quadratic Equation', icon: Function },
+                        { text: 'Write a Python Script', icon: Terminal },
+                        { text: 'Plan a trip', icon: Sparkles }
                      ].map((item, i) => (
                        <button 
                         key={i} 
                         onClick={() => handleSuggestionClick(item.text)}
                         className={`glass-pill px-5 py-2.5 rounded-full flex items-center gap-2 text-sm font-medium text-gray-700 animate-pop delay-${(i+1)*100}`}
                       >
-                          <item.icon className="w-4 h-4 text-gray-500" />
+                          {item.icon === Terminal ? <Terminal className="w-4 h-4 text-gray-500" /> : 
+                           item.icon === Code ? <Code className="w-4 h-4 text-gray-500" /> :
+                           <Sparkles className="w-4 h-4 text-gray-500" />}
                           <span>{item.text}</span>
                        </button>
                      ))}
@@ -1464,7 +1529,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Bottom Input Area - Only visible when there are messages */}
         {messages.length > 0 && (
           <div className="absolute bottom-0 left-0 right-0 pt-10 pb-6 bg-gradient-to-t from-[#F8F9FA]/80 via-[#F8F9FA]/40 to-transparent pointer-events-none animate-fade-in">
             <div className="max-w-[800px] mx-auto px-4 pointer-events-auto">
