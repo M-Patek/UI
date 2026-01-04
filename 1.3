@@ -141,6 +141,58 @@ const customStyles = `
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* iOS 26 Glassmorphism Utilities */
+  .glass {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  }
+  
+  .glass-darker {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  }
+  
+  .glass-sidebar {
+    background: rgba(240, 244, 249, 0.3);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+  }
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .glass-input {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  }
+
+  .glass-bubble-user {
+    background: rgba(231, 240, 254, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
 `;
 
 // Toast Notification Component
@@ -154,7 +206,7 @@ const Toast = ({ message, onClose }) => {
   if (!message) return null;
 
   return (
-    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#323232] text-[#F5F5F5] px-4 py-3 rounded-lg text-sm z-[100] toast-enter shadow-lg flex items-center gap-2 min-w-[200px] justify-center">
+    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 glass-darker text-gray-800 px-4 py-3 rounded-2xl text-sm z-[100] toast-enter flex items-center gap-2 min-w-[200px] justify-center font-medium">
       <span>{message}</span>
     </div>
   );
@@ -168,15 +220,15 @@ const Modal = ({ isOpen, onClose, title, children }) => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-black/10 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
       
       {/* Content */}
-      <div className="bg-white rounded-3xl w-[90%] max-w-md p-6 shadow-2xl relative z-10 animate-modal transform top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border border-gray-100">
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-50">
+      <div className="glass-darker rounded-[32px] w-[90%] max-w-md p-6 relative z-10 animate-modal transform top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200/50">
           <h2 className="text-xl font-medium text-gray-800">{title}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100/50 rounded-full transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -198,7 +250,7 @@ const SettingsContent = () => {
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Preferences</h3>
         <div 
           onClick={() => setDarkTheme(!darkTheme)}
-          className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer"
+          className="flex items-center justify-between p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-3">
             {darkTheme ? <Moon className="w-5 h-5 text-blue-600" /> : <Sun className="w-5 h-5 text-gray-600" />}
@@ -209,7 +261,7 @@ const SettingsContent = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+        <div className="flex items-center justify-between p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer">
           <div className="flex items-center gap-3">
             <Puzzle className="w-5 h-5 text-gray-600" />
             <span className="text-gray-700">Extensions</span>
@@ -217,7 +269,7 @@ const SettingsContent = () => {
           <ExternalLink className="w-4 h-4 text-gray-400" />
         </div>
 
-        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+        <div className="flex items-center justify-between p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer">
           <div className="flex items-center gap-3">
             <Globe className="w-5 h-5 text-gray-600" />
             <span className="text-gray-700">Language</span>
@@ -226,24 +278,24 @@ const SettingsContent = () => {
         </div>
       </div>
 
-      <div className="border-t border-gray-100 my-2"></div>
+      <div className="border-t border-gray-200/50 my-2"></div>
 
       <div className="px-1 py-1">
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Account</h3>
-        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+        <div className="flex items-center justify-between p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer">
           <div className="flex items-center gap-3">
             <Shield className="w-5 h-5 text-gray-600" />
             <span className="text-gray-700">Public links</span>
           </div>
           <ExternalLink className="w-4 h-4 text-gray-400" />
         </div>
-        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+        <div className="flex items-center justify-between p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer">
           <div className="flex items-center gap-3">
             <CreditCard className="w-5 h-5 text-gray-600" />
             <span className="text-gray-700">Subscription</span>
           </div>
         </div>
-        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+        <div className="flex items-center justify-between p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer">
           <div className="flex items-center gap-3">
             <Bell className="w-5 h-5 text-gray-600" />
             <span className="text-gray-700">Notifications</span>
@@ -261,7 +313,7 @@ const ActivityContent = () => (
       <input 
         type="text" 
         placeholder="Search your activity" 
-        className="w-full bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+        className="w-full bg-white/40 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-200 outline-none backdrop-blur-sm"
       />
     </div>
 
@@ -274,13 +326,13 @@ const ActivityContent = () => (
         { title: "Explain React Hooks", time: "10:42 AM" },
         { title: "Draft an email to boss", time: "09:15 AM" }
       ].map((item, i) => (
-        <div key={i} className="group flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+        <div key={i} className="group flex items-start gap-3 p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer">
           <MessageSquare className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800 truncate">{item.title}</p>
             <p className="text-xs text-gray-400 mt-0.5">{item.time} • Web</p>
           </div>
-          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-all">
+          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/60 rounded-full text-gray-500 transition-all">
             <X className="w-3 h-3" />
           </button>
         </div>
@@ -293,13 +345,13 @@ const ActivityContent = () => (
         { title: "Python script for data analysis", time: "4:20 PM" },
         { title: "Best sushi restaurants in Tokyo", time: "1:30 PM" }
       ].map((item, i) => (
-        <div key={i} className="group flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
+        <div key={i} className="group flex items-start gap-3 p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer">
           <MessageSquare className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800 truncate">{item.title}</p>
             <p className="text-xs text-gray-400 mt-0.5">{item.time} • Mobile</p>
           </div>
-          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-all">
+          <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/60 rounded-full text-gray-500 transition-all">
             <X className="w-3 h-3" />
           </button>
         </div>
@@ -310,10 +362,10 @@ const ActivityContent = () => (
 
 const HelpContent = () => (
   <div className="space-y-2">
-    <div className="p-4 bg-blue-50 rounded-2xl mb-4">
+    <div className="p-4 bg-blue-50/50 rounded-2xl mb-4 border border-blue-100/50">
       <h4 className="font-medium text-blue-800 mb-1">Gemini Advanced</h4>
       <p className="text-xs text-blue-600 mb-3">Get our most capable AI models and priority access to new features.</p>
-      <button className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium hover:bg-blue-700 transition-colors">
+      <button className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
         Upgrade now
       </button>
     </div>
@@ -325,7 +377,7 @@ const HelpContent = () => (
       { icon: FileQuestion, text: "Send feedback" },
       { icon: Info, text: "Privacy & Terms" }
     ].map((item, i) => (
-      <div key={i} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer group">
+      <div key={i} className="flex items-center justify-between p-3 hover:bg-white/40 rounded-xl transition-colors cursor-pointer group">
         <div className="flex items-center gap-3">
           <item.icon className="w-5 h-5 text-gray-500 group-hover:text-gray-700" />
           <span className="text-gray-700 group-hover:text-gray-900">{item.text}</span>
@@ -334,7 +386,7 @@ const HelpContent = () => (
       </div>
     ))}
     
-    <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+    <div className="mt-4 pt-4 border-t border-gray-200/50 text-center">
       <p className="text-xs text-gray-400">Version 2024.05.15</p>
     </div>
   </div>
@@ -386,13 +438,13 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             onBlur={() => { setIsEditing(false); setEditTitle(chat.title); }}
-            className="w-full bg-white border border-blue-500 rounded px-2 py-1 text-sm outline-none"
+            className="w-full bg-white/50 border border-blue-500 rounded px-2 py-1 text-sm outline-none backdrop-blur-sm"
           />
         </form>
       ) : (
         <div 
           onClick={() => onLoad(chat.title)}
-          className="w-full flex items-center justify-between hover:bg-[#E0E4E9] px-4 py-2 rounded-full cursor-pointer transition-colors relative"
+          className="w-full flex items-center justify-between hover:bg-white/40 px-4 py-2 rounded-full cursor-pointer transition-colors relative"
         >
           <div className="flex items-center gap-2 overflow-hidden flex-1">
             <span className={`text-sm text-gray-700 truncate ${chat.pinned ? 'font-medium' : ''}`}>{chat.title}</span>
@@ -400,10 +452,10 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
           </div>
 
           {/* Hover Menu Trigger */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-[#E0E4E9] pl-2 shadow-[-10px_0_10px_#E0E4E9]">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 glass-darker pl-2 rounded-l-md">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-              className="p-1 hover:bg-gray-300 rounded-full text-gray-600"
+              className="p-1 hover:bg-gray-300/50 rounded-full text-gray-600"
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -411,26 +463,26 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
         </div>
       )}
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu - Glass Style */}
       {showMenu && !isEditing && (
-        <div ref={menuRef} className="absolute right-0 top-8 z-50 w-36 bg-white rounded-lg shadow-xl border border-gray-100 py-1 flex flex-col animate-fade-in">
+        <div ref={menuRef} className="absolute right-0 top-8 z-50 w-36 glass-darker rounded-2xl shadow-xl py-1 flex flex-col animate-fade-in">
            <button 
             onClick={(e) => { e.stopPropagation(); onPin(chat.id); setShowMenu(false); }}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-white/40 w-full text-left"
           >
             <Pin className="w-4 h-4" />
             {chat.pinned ? 'Unpin' : 'Pin'}
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-white/40 w-full text-left"
           >
             <Edit2 className="w-4 h-4" />
             Rename
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(chat.id); setShowMenu(false); }}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50/50 w-full text-left"
           >
             <Trash2 className="w-4 h-4" />
             Delete
@@ -465,7 +517,7 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
   return (
     <div 
       className={`
-        fixed inset-y-0 left-0 z-50 bg-[#F0F4F9] flex flex-col shadow-lg 
+        fixed inset-y-0 left-0 z-50 glass-sidebar flex flex-col shadow-2xl 
         transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]
         /* Mobile Behavior: Always 72 width, translate to hide/show */
         w-72 transform
@@ -485,7 +537,7 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
         `}
       >
         <div className="p-4 flex items-center justify-between">
-          <button onClick={toggleSidebar} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+          <button onClick={toggleSidebar} className="p-2 hover:bg-white/40 rounded-full transition-colors">
             <Menu className="w-5 h-5 text-gray-600" />
           </button>
         </div>
@@ -494,7 +546,7 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
           <button 
             key={isOpen ? 'newchat-open' : 'newchat-closed'}
             onClick={onNewChat}
-            className={`w-full flex items-center space-x-3 bg-[#DDE3EA] hover:bg-[#D3E3FD] text-gray-700 hover:text-[#041E49] px-4 py-3 rounded-2xl transition-all duration-200 whitespace-nowrap ${isOpen ? 'animate-pop delay-100' : ''}`}
+            className={`w-full flex items-center space-x-3 glass-card text-gray-700 hover:text-[#041E49] px-4 py-3 rounded-2xl transition-all duration-200 whitespace-nowrap ${isOpen ? 'animate-pop delay-100' : ''}`}
           >
             <Plus className="w-5 h-5 shrink-0" />
             <span className="font-medium text-sm">New chat</span>
@@ -521,24 +573,24 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
           </div>
         </div>
 
-        <div className="p-2 mt-auto border-t border-gray-200 bg-[#F0F4F9]">
+        <div className="p-2 mt-auto border-t border-white/20">
           <button 
             onClick={() => onOpenModal('help')}
-            className="w-full flex items-center space-x-3 hover:bg-[#E0E4E9] px-4 py-2.5 rounded-full text-left transition-colors whitespace-nowrap"
+            className="w-full flex items-center space-x-3 hover:bg-white/40 px-4 py-2.5 rounded-full text-left transition-colors whitespace-nowrap"
           >
             <HelpCircle className="w-5 h-5 text-gray-600 shrink-0" />
             <span className="text-sm text-gray-700">Help</span>
           </button>
           <button 
             onClick={() => onOpenModal('activity')}
-            className="w-full flex items-center space-x-3 hover:bg-[#E0E4E9] px-4 py-2.5 rounded-full text-left transition-colors whitespace-nowrap"
+            className="w-full flex items-center space-x-3 hover:bg-white/40 px-4 py-2.5 rounded-full text-left transition-colors whitespace-nowrap"
           >
             <Activity className="w-5 h-5 text-gray-600 shrink-0" />
             <span className="text-sm text-gray-700">Activity</span>
           </button>
           <button 
             onClick={() => onOpenModal('settings')}
-            className="w-full flex items-center space-x-3 hover:bg-[#E0E4E9] px-4 py-2.5 rounded-full text-left transition-colors whitespace-nowrap"
+            className="w-full flex items-center space-x-3 hover:bg-white/40 px-4 py-2.5 rounded-full text-left transition-colors whitespace-nowrap"
           >
             <Settings className="w-5 h-5 text-gray-600 shrink-0" />
             <span className="text-sm text-gray-700">Settings</span>
@@ -549,13 +601,13 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
   );
 };
 
-// Updated UserMessage with slide-in from left
+// Updated UserMessage with slide-in from left - Glassy Style
 const UserMessage = ({ content, delay = 0 }) => (
   <div 
     className="flex justify-end mb-8 animate-message-slide-in"
     style={{ animationDelay: `${delay}ms` }}
   >
-    <div className="bg-[#E7F0FE] text-[#1F1F1F] px-5 py-3 rounded-2xl rounded-tr-sm max-w-[80%] md:max-w-[70%] leading-relaxed whitespace-pre-wrap shadow-sm">
+    <div className="glass-bubble-user text-[#1F1F1F] px-5 py-3 rounded-2xl rounded-tr-sm max-w-[80%] md:max-w-[70%] leading-relaxed whitespace-pre-wrap shadow-sm">
       {content}
     </div>
   </div>
@@ -614,28 +666,28 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
           <div className="flex items-center space-x-1 pt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <button 
               onClick={handleLike}
-              className={`p-1.5 hover:bg-gray-100 rounded-full transition-colors ${liked ? 'text-blue-600' : 'text-gray-500'}`} 
+              className={`p-1.5 hover:bg-white/50 rounded-full transition-colors ${liked ? 'text-blue-600' : 'text-gray-500'}`} 
               title="Good response"
             >
               <ThumbsUp className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
             </button>
             <button 
               onClick={handleDislike}
-              className={`p-1.5 hover:bg-gray-100 rounded-full transition-colors ${disliked ? 'text-red-500' : 'text-gray-500'}`}
+              className={`p-1.5 hover:bg-white/50 rounded-full transition-colors ${disliked ? 'text-red-500' : 'text-gray-500'}`}
             >
               <ThumbsDown className={`w-4 h-4 ${disliked ? 'fill-current' : ''}`} />
             </button>
             <button 
               onClick={handleCopy}
-              className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"
+              className="p-1.5 hover:bg-white/50 rounded-full text-gray-500 transition-colors"
               title="Copy"
             >
               <Copy className="w-4 h-4" />
             </button>
-            <button className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors" title="Regenerate">
+            <button className="p-1.5 hover:bg-white/50 rounded-full text-gray-500 transition-colors" title="Regenerate">
               <RotateCcw className="w-4 h-4" />
             </button>
-            <button className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+            <button className="p-1.5 hover:bg-white/50 rounded-full text-gray-500 transition-colors">
               <MoreVertical className="w-4 h-4" />
             </button>
           </div>
@@ -822,8 +874,15 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F8F9FA] font-sans overflow-hidden text-[#1F1F1F] selection:bg-[#c2dbfe] selection:text-[#0b57d0]">
+    <div className="relative flex h-screen font-sans overflow-hidden text-[#1F1F1F] selection:bg-[#c2dbfe] selection:text-[#0b57d0] bg-[#F8F9FA]">
       <style>{customStyles}</style>
+
+      {/* Moved Blobs to global background so sidebar can be transparent */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
+        <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+        <div className="absolute top-0 right-1/4 w-[800px] h-[800px] bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-1/3 w-[800px] h-[800px] bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
 
       <Toast message={toastMsg} onClose={() => setToastMsg('')} />
 
@@ -845,26 +904,26 @@ export default function App() {
         setChatHistory={setChatHistory}
       />
 
-      <div className="flex-1 flex flex-col h-full relative z-0">
+      <div className="flex-1 flex flex-col h-full relative z-10">
         
         <div className="flex items-center justify-between px-5 py-3">
           <div className="flex items-center space-x-2">
             {!isSidebarOpen && (
-              <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-gray-200 rounded-full transition-colors mr-2">
+              <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-white/50 rounded-full transition-colors mr-2">
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
             )}
             
-            {/* NEW: Persistent New Chat Icon Button */}
+            {/* NEW: Persistent New Chat Icon Button - Glassy */}
             <button 
               onClick={handleNewChat}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors mr-2 text-gray-600"
+              className="p-2 hover:bg-white/50 rounded-full transition-colors mr-2 text-gray-600"
               title="New Chat"
             >
               <SquarePen className="w-5 h-5" />
             </button>
 
-            <button className="flex items-center space-x-1 text-lg font-medium text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors">
+            <button className="flex items-center space-x-1 text-lg font-medium text-gray-600 hover:bg-white/50 px-3 py-1.5 rounded-lg transition-colors">
               <span>Gemini</span>
               <span className="text-xs text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500 font-bold">Advanced</span>
               <MoreVertical className="w-4 h-4 ml-1" />
@@ -873,22 +932,16 @@ export default function App() {
           <div className="flex items-center space-x-2">
              <button 
                 onClick={() => setActiveModal('settings')}
-                className="p-2 hover:bg-gray-200 rounded-full transition-colors hidden sm:block"
+                className="p-2 hover:bg-white/50 rounded-full transition-colors hidden sm:block"
              >
                 <Settings className="w-5 h-5 text-gray-600" />
              </button>
-             <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-medium cursor-pointer hover:ring-4 hover:ring-purple-100 transition-all">U</div>
+             <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm font-medium cursor-pointer hover:ring-4 hover:ring-purple-100 transition-all shadow-lg shadow-purple-200">U</div>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto relative no-scrollbar">
           
-          <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-30">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-            <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-8 left-1/3 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
-          </div>
-
           {/* Add key here to force re-render and trigger animation on conversation switch */}
           <div key={conversationId} className="max-w-[800px] mx-auto px-4 pb-32 pt-10">
             {messages.length === 0 ? (
@@ -898,7 +951,7 @@ export default function App() {
                       Hello, User
                     </span>
                     <br />
-                    <span className="text-5xl font-medium text-[#C4C7C5]">
+                    <span className="text-5xl font-medium text-[#939699]">
                       How can I help today?
                     </span>
                   </div>
@@ -912,11 +965,11 @@ export default function App() {
                        <button 
                         key={i} 
                         onClick={() => handleSuggestionClick(item.text)}
-                        className={`bg-[#F0F4F9] hover:bg-[#DDE3EA] p-4 rounded-xl text-left h-40 flex flex-col justify-between transition-colors relative overflow-hidden group animate-pop delay-${(i+1)*100}`}
+                        className={`glass-card p-4 rounded-3xl text-left h-40 flex flex-col justify-between relative overflow-hidden group animate-pop delay-${(i+1)*100}`}
                       >
-                          <span className="text-sm font-medium text-gray-700">{item.text}</span>
-                          <div className="self-end p-2 bg-white rounded-full shadow-sm group-hover:shadow-md transition-shadow">
-                            <item.icon className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
+                          <span className="text-sm font-medium text-gray-700 z-10">{item.text}</span>
+                          <div className="self-end p-2 bg-white/50 rounded-full shadow-sm group-hover:shadow-md transition-shadow z-10 backdrop-blur-sm">
+                            <item.icon className="w-4 h-4 text-gray-600 group-hover:text-blue-500" />
                           </div>
                        </button>
                      ))}
@@ -939,12 +992,11 @@ export default function App() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#F8F9FA] via-[#F8F9FA] to-transparent pt-10 pb-6">
-          <div className="max-w-[800px] mx-auto px-4">
+        <div className="absolute bottom-0 left-0 right-0 pt-10 pb-6 bg-gradient-to-t from-[#F8F9FA]/80 via-[#F8F9FA]/40 to-transparent pointer-events-none">
+          <div className="max-w-[800px] mx-auto px-4 pointer-events-auto">
             <div className={`
-              relative flex items-end gap-2 p-3 rounded-[32px] transition-all duration-300 border border-transparent
-              ${input ? 'bg-white shadow-md' : 'bg-[#F0F4F9] hover:bg-[#E9EEF6]'}
-              focus-within:bg-white focus-within:shadow-md focus-within:border-gray-200
+              relative flex items-end gap-2 p-3 rounded-[32px] transition-all duration-300
+              glass-input
             `}>
               
               <input 
@@ -956,7 +1008,7 @@ export default function App() {
               />
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors mb-0.5 tooltip"
+                className="p-2 text-gray-600 hover:bg-gray-100/50 rounded-full transition-colors mb-0.5 tooltip"
                 title="Upload image"
               >
                 <ImageIcon className="w-6 h-6" />
@@ -977,14 +1029,14 @@ export default function App() {
                 {input ? (
                    <button 
                     onClick={() => handleSend()}
-                    className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors animate-pop"
+                    className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors animate-pop shadow-lg shadow-blue-500/30"
                   >
                     <Send className="w-5 h-5" />
                   </button>
                 ) : (
                   <button 
                     onClick={toggleMic}
-                    className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                    className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-gray-600 hover:bg-gray-100/50'}`}
                   >
                     <Mic className={`w-6 h-6 ${isListening ? 'animate-pulse' : ''}`} />
                   </button>
