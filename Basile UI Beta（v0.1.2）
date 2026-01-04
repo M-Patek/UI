@@ -156,7 +156,6 @@ const customStyles = `
   }
 
   /* Global Scrollbar Styling (Clean & Minimal) */
-  /* FIXED: Thicker scrollbars */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -189,10 +188,10 @@ const customStyles = `
     scrollbar-width: none;
   }
 
-  /* NEW: Scroll Mask for Fading Edges */
+  /* NEW: Scroll Mask for Fading Edges - FIXED: Larger range (40px) but soft fade */
   .scroll-mask {
-    mask-image: linear-gradient(to bottom, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20px, black calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 40px, black calc(100% - 40px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 40px, black calc(100% - 40px), transparent 100%);
   }
 
   /* iOS 26 Glassmorphism Utilities */
@@ -234,7 +233,6 @@ const customStyles = `
     -webkit-backdrop-filter: blur(12px) saturate(120%);
     border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
-    /* FIXED: Deeper shadow for code blocks */
     box-shadow: 0 8px 24px rgba(0,0,0,0.08);
   }
   .glass-card:hover {
@@ -248,7 +246,6 @@ const customStyles = `
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.6);
-    /* FIXED: Deeper shadow for input box */
     box-shadow: 0 10px 40px rgba(31, 38, 135, 0.12);
   }
 
@@ -912,7 +909,7 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index, isActive 
           onClick={() => onLoad(chat.id, chat.title)}
           className={`w-full flex items-center justify-between px-4 py-2 rounded-full cursor-pointer transition-all duration-200 relative
             ${isActive 
-              ? 'bg-purple-200/60 shadow-md border border-purple-300/50' // FIXED: Deeper purple and shadow
+              ? 'bg-purple-200/60 shadow-md border border-purple-100/50' // FIXED: Soft border
               : 'hover:bg-white/40'
             }
           `}
