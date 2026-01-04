@@ -1004,7 +1004,7 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index, isActive 
           className={`w-full flex items-center justify-between px-4 py-2 rounded-full cursor-pointer transition-all duration-200 relative
             ${isActive 
               ? 'bg-purple-200/60 dark:bg-purple-500/30 shadow-md border border-purple-100/50 dark:border-purple-400/20' // FIXED: Soft border
-              : 'hover:bg-white/40 dark:hover:bg-white/10'
+              : 'hover:bg-white/40 dark:hover:bg-white/25'
             }
           `}
           style={isActive ? { boxShadow: '0 4px 12px rgba(147, 51, 234, 0.1)' } : {}}
@@ -1621,7 +1621,7 @@ export default function App() {
   return (
     <div 
       className={`relative flex h-screen font-sans overflow-hidden text-[#1F1F1F] selection:bg-[#c2dbfe] selection:text-[#0b57d0] transition-colors duration-500 ${darkTheme ? 'dark' : ''}`}
-      style={{ backgroundColor: darkTheme ? '#050407' : '#F8F9FA' }}
+      style={{ backgroundColor: darkTheme ? '#040008' : '#F8F9FA' }}
     >
       <style>{customStyles}</style>
 
