@@ -38,7 +38,7 @@ import {
   Info,
   Zap,
   ChevronDown,
-  Terminal // Added for generic code icon
+  Terminal
 } from 'lucide-react';
 
 // Custom CSS for animations and gradients
@@ -251,6 +251,34 @@ const customStyles = `
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   }
+
+  /* Table Styles */
+  .markdown-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .markdown-table th {
+    background-color: rgba(240, 244, 249, 0.5);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+  }
+  .markdown-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+  .markdown-table tr:last-child td {
+    border-bottom: none;
+  }
+  .markdown-table tr:hover {
+    background-color: rgba(255,255,255,0.4);
+  }
 `;
 
 // Toast Notification Component
@@ -338,6 +366,160 @@ const CodeCanvas = ({ language, code }) => {
     </div>
   );
 };
+
+// Simple Markdown Table Component
+const MarkdownTable = ({ content }) => {
+  const rows = content.trim().split('\n').filter(row => row.trim() !== '');
+  if (rows.length < 2) return <div className="whitespace-pre-wrap">{content}</div>;
+
+  // Header is the first row, separator is usually the second
+  const headerRow = rows[0];
+  const separatorRow = rows[1];
+  const bodyRows = rows.slice(2);
+
+  const parseRow = (row) => {
+    return row.split('|').filter((cell, index, arr) => {
+      // Remove first and last empty elements created by splitting |...|
+      if (index === 0 && cell.trim() === '') return false;
+      if (index === arr.length - 1 && cell.trim() === '') return false;
+      return true;
+    }).map(cell => cell.trim());
+  };
+
+  const headers = parseRow(headerRow);
+  
+  // Verify it looks like a table (has |)
+  if (!headerRow.includes('|')) return <div className="whitespace-pre-wrap">{content}</div>;
+
+  return (
+    <div className="overflow-x-auto my-4 rounded-xl border border-gray-200/50">
+      <table className="markdown-table">
+        <thead>
+          <tr>
+            {headers.map((header, i) => (
+              <th key={i}>{header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {bodyRows.map((row, i) => {
+            const cells = parseRow(row);
+            // Skip separator rows if they ended up in body
+            if (row.includes('---')) return null;
+            return (
+              <tr key={i}>
+                {cells.map((cell, j) => (
+                  <td key={j}>{cell}</td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// Input Area Component - MOVED OUTSIDE APP TO FIX FOCUS ISSUES
+const InputArea = ({ 
+  input, 
+  setInput, 
+  onSend, 
+  isCentered = false, 
+  fileInputRef, 
+  handleFileUpload,
+  inputRef,
+  isListening,
+  toggleMic,
+  showModeMenu,
+  setShowModeMenu,
+  inputMode,
+  setInputMode,
+  modeMenuRef,
+  handleKeyDown
+}) => (
+  <div className={`
+    relative flex items-end gap-2 p-3 rounded-[32px] transition-all duration-300
+    glass-input w-full
+    ${isCentered ? 'shadow-lg' : ''}
+  `}>
+    <input 
+      type="file" 
+      ref={fileInputRef} 
+      className="hidden" 
+      onChange={handleFileUpload} 
+      accept="image/*"
+    />
+    <button 
+      onClick={() => fileInputRef.current?.click()}
+      className="p-2 text-gray-600 hover:bg-gray-100/50 rounded-full transition-colors mb-0.5 tooltip"
+      title="Upload image"
+    >
+      <ImageIcon className="w-6 h-6" />
+    </button>
+
+    <textarea
+      ref={inputRef}
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      onKeyDown={handleKeyDown}
+      placeholder="Enter a prompt here"
+      className="w-full bg-transparent border-none outline-none resize-none text-base py-3 max-h-32 text-gray-800 placeholder-gray-500"
+      rows={1}
+      style={{ minHeight: '48px' }}
+    />
+
+    <div className="flex items-center gap-1 mb-0.5">
+      {input ? (
+         <button 
+          onClick={() => onSend()}
+          className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors animate-pop shadow-lg shadow-blue-500/30"
+        >
+          <Send className="w-5 h-5" />
+        </button>
+      ) : (
+        <div className="flex items-center gap-2">
+          {/* Mode Selector - Left of Mic */}
+          <div className="relative" ref={modeMenuRef}>
+            <button 
+              onClick={() => setShowModeMenu(!showModeMenu)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-medium border border-transparent ${showModeMenu ? 'bg-white/60 shadow-sm border-white/40' : 'hover:bg-white/40 text-gray-600'}`}
+              title="Select Model"
+            >
+              <span className="text-gray-700">{inputMode}</span>
+              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showModeMenu ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showModeMenu && (
+              <div className="absolute bottom-full left-0 mb-2 w-32 glass-menu rounded-2xl p-1 z-50 animate-pop shadow-xl">
+                {['Fast', 'Thinking', 'Pro'].map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      setInputMode(mode);
+                      setShowModeMenu(false);
+                    }}
+                    className="flex items-center justify-between w-full p-2 hover:bg-white/60 rounded-xl text-left text-xs font-medium text-gray-700 transition-colors"
+                  >
+                    <span>{mode}</span>
+                    {inputMode === mode && <Check className="w-3 h-3 text-blue-600" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button 
+            onClick={toggleMic}
+            className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-gray-600 hover:bg-gray-100/50'}`}
+          >
+            <Mic className={`w-6 h-6 ${isListening ? 'animate-pulse' : ''}`} />
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+);
 
 // Enhanced Modal Contents
 const SettingsContent = () => {
@@ -712,7 +894,7 @@ const UserMessage = ({ content, delay = 0 }) => (
   </div>
 );
 
-// Updated AIMessage with Canvas Parsing for Code Blocks
+// Updated AIMessage with Canvas Parsing for Code Blocks AND Tables
 const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
@@ -744,22 +926,16 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
     if (!disliked) onShowToast("Thanks for the feedback!");
   };
 
-  // Helper function to render formatted content
+  // Helper function to render formatted content (Code blocks + Tables)
   const renderContent = (text) => {
     if (!text) return null;
     
-    // Split by code blocks or horizontal rules
-    // Capture group keeps the delimiters in the output array
-    // Regex logic: 
-    // 1. ```...``` code blocks
-    // 2. --- horizontal rules
-    const parts = text.split(/(```[\s\S]*?```|^\s*---\s*$)/gm);
+    // 1. Split by code blocks
+    const parts = text.split(/(```[\s\S]*?```)/gm);
     
     return parts.map((part, index) => {
       // Handle Code Blocks
       if (part.startsWith('```') && part.endsWith('```')) {
-        // Extract language and code content
-        // Match ```language\n code ``` or just ```\n code ```
         const match = part.match(/^```(\w+)?\n([\s\S]*?)```$/);
         if (match) {
           const language = match[1] || 'text';
@@ -768,19 +944,50 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
         }
       }
       
-      // Handle Horizontal Rule
-      if (part.trim() === '---') {
-        return <div key={index} className="h-px bg-gray-300/50 my-4" />;
+      // Handle Text (detect tables inside text blocks)
+      // Check if text block contains table syntax (lines starting with |)
+      // Simple splitter for tables: groups contiguous lines starting with |
+      const lines = part.split('\n');
+      const elements = [];
+      let currentTableBuffer = [];
+      let inTable = false;
+
+      lines.forEach((line, lineIdx) => {
+        const isTableLine = line.trim().startsWith('|') && line.trim().endsWith('|');
+        const isSeparator = line.trim() === '---';
+        
+        if (isTableLine) {
+          currentTableBuffer.push(line);
+          inTable = true;
+        } else {
+          // If we were in a table, flush it
+          if (inTable && currentTableBuffer.length > 0) {
+            elements.push(
+              <MarkdownTable key={`${index}-table-${lineIdx}`} content={currentTableBuffer.join('\n')} />
+            );
+            currentTableBuffer = [];
+            inTable = false;
+          }
+          
+          if (isSeparator) {
+             elements.push(<div key={`${index}-hr-${lineIdx}`} className="h-px bg-gray-300/50 my-4" />);
+          } else if (line.trim() !== '') {
+            // Regular text line
+            elements.push(
+              <div key={`${index}-text-${lineIdx}`} className="whitespace-pre-wrap mb-1">{line}</div>
+            );
+          }
+        }
+      });
+      
+      // Flush remaining table buffer if exists
+      if (currentTableBuffer.length > 0) {
+        elements.push(
+          <MarkdownTable key={`${index}-table-end`} content={currentTableBuffer.join('\n')} />
+        );
       }
 
-      // Handle Regular Text (trimmed slightly to avoid excessive newlines around blocks)
-      if (part.trim() === '') return null;
-
-      return (
-        <span key={index} className="whitespace-pre-wrap">
-          {part}
-        </span>
-      );
+      return <div key={index}>{elements}</div>;
     });
   };
 
@@ -1006,7 +1213,7 @@ export default function App() {
     setConversationId(Date.now()); // Trigger new animation
     setMessages([
       { id: 1, role: 'user', content: `Tell me about ${topic}` },
-      { id: 2, role: 'ai', content: `Here is the retrieved information regarding **${topic}**. \n\nIt seems we discussed this yesterday. The key takeaways were:\n- Simplicity is key\n- Use consistent spacing\n\nDo you want to continue this conversation?` }
+      { id: 2, role: 'ai', content: `Here is the retrieved information regarding **${topic}**. \n\n| Item | Status | Notes |\n|---|---|---|\n| Simplicity | ✅ | Keep it clean |\n| Spacing | ✅ | Consistent margins |\n\nDo you want to continue this conversation?` }
     ]);
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
@@ -1051,91 +1258,6 @@ export default function App() {
       default: return '';
     }
   };
-
-  // Reusable Input Area Component to keep UI consistent but logic centralized
-  const InputArea = ({ isCentered = false }) => (
-    <div className={`
-      relative flex items-end gap-2 p-3 rounded-[32px] transition-all duration-300
-      glass-input w-full
-      ${isCentered ? 'shadow-lg' : ''}
-    `}>
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        className="hidden" 
-        onChange={handleFileUpload} 
-        accept="image/*"
-      />
-      <button 
-        onClick={() => fileInputRef.current?.click()}
-        className="p-2 text-gray-600 hover:bg-gray-100/50 rounded-full transition-colors mb-0.5 tooltip"
-        title="Upload image"
-      >
-        <ImageIcon className="w-6 h-6" />
-      </button>
-
-      <textarea
-        ref={inputRef}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Enter a prompt here"
-        className="w-full bg-transparent border-none outline-none resize-none text-base py-3 max-h-32 text-gray-800 placeholder-gray-500"
-        rows={1}
-        style={{ minHeight: '48px' }}
-      />
-
-      <div className="flex items-center gap-1 mb-0.5">
-        {input ? (
-           <button 
-            onClick={() => handleSend()}
-            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors animate-pop shadow-lg shadow-blue-500/30"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        ) : (
-          <div className="flex items-center gap-2">
-            {/* Mode Selector - Left of Mic */}
-            <div className="relative" ref={modeMenuRef}>
-              <button 
-                onClick={() => setShowModeMenu(!showModeMenu)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-medium border border-transparent ${showModeMenu ? 'bg-white/60 shadow-sm border-white/40' : 'hover:bg-white/40 text-gray-600'}`}
-                title="Select Model"
-              >
-                <span className="text-gray-700">{inputMode}</span>
-                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showModeMenu ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {showModeMenu && (
-                <div className="absolute bottom-full left-0 mb-2 w-32 glass-menu rounded-2xl p-1 z-50 animate-pop shadow-xl">
-                  {['Fast', 'Thinking', 'Pro'].map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => {
-                        setInputMode(mode);
-                        setShowModeMenu(false);
-                      }}
-                      className="flex items-center justify-between w-full p-2 hover:bg-white/60 rounded-xl text-left text-xs font-medium text-gray-700 transition-colors"
-                    >
-                      <span>{mode}</span>
-                      {inputMode === mode && <Check className="w-3 h-3 text-blue-600" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button 
-              onClick={toggleMic}
-              className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-gray-600 hover:bg-gray-100/50'}`}
-            >
-              <Mic className={`w-6 h-6 ${isListening ? 'animate-pulse' : ''}`} />
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <div className="relative flex h-screen font-sans overflow-hidden text-[#1F1F1F] selection:bg-[#c2dbfe] selection:text-[#0b57d0] bg-[#F8F9FA]">
@@ -1224,7 +1346,26 @@ export default function App() {
 
                   {/* Centered Input Box */}
                   <div className="w-full max-w-3xl mb-8">
-                    <InputArea isCentered={true} />
+                     {/* MOVED OUTSIDE: We now pass props to InputArea instead of defining it inside App.
+                         This prevents re-renders from losing focus.
+                      */}
+                    <InputArea 
+                      input={input}
+                      setInput={setInput}
+                      onSend={handleSend}
+                      isCentered={true}
+                      fileInputRef={fileInputRef}
+                      handleFileUpload={handleFileUpload}
+                      inputRef={inputRef}
+                      isListening={isListening}
+                      toggleMic={toggleMic}
+                      showModeMenu={showModeMenu}
+                      setShowModeMenu={setShowModeMenu}
+                      inputMode={inputMode}
+                      setInputMode={setInputMode}
+                      modeMenuRef={modeMenuRef}
+                      handleKeyDown={handleKeyDown}
+                    />
                   </div>
 
                   {/* Pill Shaped Suggestions Below Input */}
@@ -1269,7 +1410,22 @@ export default function App() {
         {messages.length > 0 && (
           <div className="absolute bottom-0 left-0 right-0 pt-10 pb-6 bg-gradient-to-t from-[#F8F9FA]/80 via-[#F8F9FA]/40 to-transparent pointer-events-none animate-fade-in">
             <div className="max-w-[800px] mx-auto px-4 pointer-events-auto">
-              <InputArea />
+              <InputArea 
+                input={input}
+                setInput={setInput}
+                onSend={handleSend}
+                fileInputRef={fileInputRef}
+                handleFileUpload={handleFileUpload}
+                inputRef={inputRef}
+                isListening={isListening}
+                toggleMic={toggleMic}
+                showModeMenu={showModeMenu}
+                setShowModeMenu={setShowModeMenu}
+                inputMode={inputMode}
+                setInputMode={setInputMode}
+                modeMenuRef={modeMenuRef}
+                handleKeyDown={handleKeyDown}
+              />
               <div className="text-center mt-3">
                 <p className="text-xs text-gray-500">
                   Gemini may display inaccurate info, including about people, so double-check its responses. 
