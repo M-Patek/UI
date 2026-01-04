@@ -26,7 +26,8 @@ import {
   Pin,
   Trash2,
   Edit2,
-  MoreHorizontal
+  MoreHorizontal,
+  SquarePen
 } from 'lucide-react';
 
 // Custom CSS for animations and gradients
@@ -286,9 +287,9 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
           onClick={() => onLoad(chat.title)}
           className="w-full flex items-center justify-between hover:bg-[#E0E4E9] px-4 py-2 rounded-full cursor-pointer transition-colors relative"
         >
-          <div className="flex items-center space-x-3 overflow-hidden">
-            {/* Removed MessageSquare icon here as requested */}
+          <div className="flex items-center gap-2 overflow-hidden flex-1">
             <span className={`text-sm text-gray-700 truncate ${chat.pinned ? 'font-medium' : ''}`}>{chat.title}</span>
+            {chat.pinned && <Pin className="w-3.5 h-3.5 text-gray-400 fill-current shrink-0" />}
           </div>
 
           {/* Hover Menu Trigger */}
@@ -369,7 +370,8 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
       `}
     >
       {/* Inner container to maintain width while sidebar shrinks (prevents content squishing) */}
-      <div className="w-72 lg:w-64 flex flex-col h-full min-w-[16rem]">
+      {/* Updated: Added transition-opacity and conditional opacity based on isOpen */}
+      <div className={`w-72 lg:w-64 flex flex-col h-full min-w-[16rem] transition-opacity duration-300 ${isOpen ? 'opacity-100 delay-100' : 'opacity-0'}`}>
         <div className="p-4 flex items-center justify-between">
           <button onClick={toggleSidebar} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
             <Menu className="w-5 h-5 text-gray-600" />
@@ -723,7 +725,7 @@ export default function App() {
               className="p-2 hover:bg-gray-200 rounded-full transition-colors mr-2 text-gray-600"
               title="New Chat"
             >
-              <Plus className="w-5 h-5" />
+              <SquarePen className="w-5 h-5" />
             </button>
 
             <button className="flex items-center space-x-1 text-lg font-medium text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors">
