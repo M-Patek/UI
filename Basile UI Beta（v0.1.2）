@@ -156,21 +156,21 @@ const customStyles = `
   }
 
   /* Global Scrollbar Styling (Clean & Minimal) */
+  /* FIXED: Thicker scrollbars */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: transparent; /* No background color for track */
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.5); /* Subtle gray thumb */
+    background: rgba(156, 163, 175, 0.5);
     border-radius: 10px;
   }
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(156, 163, 175, 0.8);
   }
-  /* Remove buttons (arrows) from all scrollbars */
   ::-webkit-scrollbar-button {
     display: none;
     width: 0;
@@ -228,6 +228,8 @@ const customStyles = `
     -webkit-backdrop-filter: blur(12px) saturate(120%);
     border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
+    /* FIXED: Added base shadow for code blocks */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
   .glass-card:hover {
     background: rgba(255, 255, 255, 0.55);
@@ -240,7 +242,8 @@ const customStyles = `
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    /* FIXED: Added stronger shadow for input box */
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
   }
 
   .glass-pill {
@@ -308,12 +311,12 @@ const customStyles = `
 
   /* Markdown & Latex Styles */
   .markdown-blockquote {
-    border-left: 4px solid #c084fc; /* FIXED: Light Purple Border */
+    border-left: 4px solid #c084fc;
     padding-left: 1rem;
     margin: 1rem 0;
     font-style: italic;
     color: #4b5563;
-    background: rgba(192, 132, 252, 0.1); /* FIXED: Light Purple Background */
+    background: rgba(192, 132, 252, 0.1);
     padding: 0.5rem 1rem;
     border-radius: 0 8px 8px 0;
   }
@@ -849,7 +852,8 @@ const HelpContent = () => (
   </div>
 );
 
-const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
+// FIXED: SidebarItem now accepts isActive and uses onLoad properly with ID
+const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index, isActive }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(chat.title);
   const [showMenu, setShowMenu] = useState(false);
@@ -899,11 +903,18 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
         </form>
       ) : (
         <div 
-          onClick={() => onLoad(chat.title)}
-          className="w-full flex items-center justify-between hover:bg-white/40 px-4 py-2 rounded-full cursor-pointer transition-colors relative"
+          onClick={() => onLoad(chat.id, chat.title)}
+          className={`w-full flex items-center justify-between px-4 py-2 rounded-full cursor-pointer transition-all duration-200 relative
+            ${isActive 
+              ? 'bg-purple-100/30 shadow-sm border border-purple-100/50' // FIXED: Active state styling
+              : 'hover:bg-white/40'
+            }
+          `}
         >
           <div className="flex items-center gap-2 overflow-hidden flex-1">
-            <span className={`text-sm text-gray-700 truncate ${chat.pinned ? 'font-medium' : ''}`}>{chat.title}</span>
+            <span className={`text-sm truncate ${isActive ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
+              {chat.title}
+            </span>
             {chat.pinned && <Pin className="w-3.5 h-3.5 text-gray-400 fill-current shrink-0" />}
           </div>
 
@@ -947,7 +958,8 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
   );
 };
 
-const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, chatHistory, setChatHistory }) => {
+// FIXED: Sidebar now accepts activeChatId and passes it down
+const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, chatHistory, setChatHistory, activeChatId }) => {
   const handlePin = (id) => {
     setChatHistory(prev => prev.map(chat => 
       chat.id === id ? { ...chat, pinned: !chat.pinned } : chat
@@ -1014,6 +1026,7 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
                 onPin={handlePin}
                 onDelete={handleDelete}
                 onRename={handleRename}
+                isActive={activeChatId === chat.id} // Pass active state
               />
             ))}
             {sortedChats.length === 0 && (
@@ -1309,6 +1322,8 @@ export default function App() {
   const [conversationId, setConversationId] = useState(0); 
   const [inputMode, setInputMode] = useState('Fast');
   const [showModeMenu, setShowModeMenu] = useState(false);
+  // FIXED: Add state for active chat
+  const [activeChatId, setActiveChatId] = useState(null);
   
   const [chatHistory, setChatHistory] = useState([
     { id: 1, title: "React UI Design Patterns", pinned: false },
@@ -1462,12 +1477,16 @@ export default function App() {
     setIsTyping(false);
     setInput('');
     setConversationId(Date.now());
+    // FIXED: Clear active selection on new chat
+    setActiveChatId(null);
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
 
-  const handleLoadRecent = (topic) => {
+  const handleLoadRecent = (id, topic) => {
     setIsTyping(false);
     setConversationId(Date.now());
+    // FIXED: Set active chat ID
+    setActiveChatId(id);
     setMessages([
       { id: 1, role: 'user', content: `Show me ${topic} features` },
       { id: 2, role: 'ai', content: `Here is a demo of the new rendering capabilities:\n\n### 1. Math Formulas (LaTeX)\n\nInline: $E = mc^2$\nBlock:\n$$\n\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$\n\n### 2. Code with Highlighting\n\n\`\`\`python\ndef hello_world():\n    print("Hello from PrismJS!")\n    return True\n\`\`\`\n\n### 3. Task Lists\n\n- [x] Implement Markdown\n- [x] Add Syntax Highlighting\n- [ ] Create World Peace\n\n> "This is a blockquote to show off the styling."\n\nCheck the **source code** for implementation details!` }
@@ -1527,6 +1546,7 @@ export default function App() {
         onOpenModal={setActiveModal}
         chatHistory={chatHistory}
         setChatHistory={setChatHistory}
+        activeChatId={activeChatId} // FIXED: Pass active ID
       />
 
       <div className="flex-1 flex flex-col h-full relative z-10">
