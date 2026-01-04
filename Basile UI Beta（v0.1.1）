@@ -39,7 +39,7 @@ import {
   Terminal,
   CheckSquare,
   Square,
-  Sigma // Added Sigma for math icon
+  Sigma
 } from 'lucide-react';
 
 // Custom CSS for animations and gradients
@@ -155,7 +155,32 @@ const customStyles = `
     animation: slideUpPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
-  /* Hide scrollbar */
+  /* Global Scrollbar Styling (Clean & Minimal) */
+  /* FIXED: Thicker scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.8);
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Hide scrollbar utility class */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -181,7 +206,7 @@ const customStyles = `
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
   }
 
-  /* Header glass is now more transparent */
+  /* Header glass */
   .glass-header {
     background: rgba(255, 255, 255, 0.5); 
     backdrop-filter: blur(24px) saturate(180%);
@@ -203,6 +228,8 @@ const customStyles = `
     -webkit-backdrop-filter: blur(12px) saturate(120%);
     border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
+    /* FIXED: Added base shadow for code blocks */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
   .glass-card:hover {
     background: rgba(255, 255, 255, 0.55);
@@ -215,7 +242,8 @@ const customStyles = `
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    /* FIXED: Added stronger shadow for input box */
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
   }
 
   .glass-pill {
@@ -283,12 +311,12 @@ const customStyles = `
 
   /* Markdown & Latex Styles */
   .markdown-blockquote {
-    border-left: 4px solid #4285F4;
+    border-left: 4px solid #c084fc;
     padding-left: 1rem;
     margin: 1rem 0;
     font-style: italic;
     color: #4b5563;
-    background: rgba(66, 133, 244, 0.05);
+    background: rgba(192, 132, 252, 0.1);
     padding: 0.5rem 1rem;
     border-radius: 0 8px 8px 0;
   }
@@ -327,7 +355,7 @@ const useExternalLib = () => {
     const loadScript = (src) => {
       return new Promise((resolve, reject) => {
         if (document.querySelector(`script[src="${src}"]`)) {
-          resolve(); // Already loaded or loading
+          resolve(); 
           return;
         }
         const script = document.createElement('script');
@@ -340,19 +368,15 @@ const useExternalLib = () => {
     };
 
     const init = async () => {
-      // Styles
       loadStyle('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css');
       loadStyle('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css');
 
-      // Scripts - Sequence is important to prevent "Script error" (Race conditions)
       try {
-        // 1. Load Core libs first
         await Promise.all([
           loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'),
           loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js')
         ]);
 
-        // 2. Load Prism languages after core is ready
         await Promise.all([
           loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js'),
           loadScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js'),
@@ -422,14 +446,13 @@ const LatexRenderer = ({ content, displayMode = false }) => {
         window.katex.render(content, containerRef.current, {
           displayMode: displayMode,
           throwOnError: false,
-          output: 'html' // Render to HTML for better layout
+          output: 'html' 
         });
       } catch (e) {
         console.warn("Katex render error:", e);
         containerRef.current.innerText = content;
       }
     } else {
-       // Simple fallback if katex hasn't loaded yet
        containerRef.current.innerText = content;
     }
   }, [content, displayMode]);
@@ -443,7 +466,6 @@ const CodeCanvas = ({ language, code }) => {
   const codeRef = useRef(null);
   
   useEffect(() => {
-    // Retry mechanism for Prism loading
     const highlight = () => {
       if (window.Prism && codeRef.current) {
         window.Prism.highlightElement(codeRef.current);
@@ -453,7 +475,6 @@ const CodeCanvas = ({ language, code }) => {
     if (window.Prism) {
       highlight();
     } else {
-      // Poll every 500ms for up to 5 seconds if script loads late
       const interval = setInterval(() => {
         if (window.Prism) {
           highlight();
@@ -494,7 +515,6 @@ const CodeCanvas = ({ language, code }) => {
           )}
         </button>
       </div>
-      {/* MODIFIED: Use standard PRE tag for proper Prism layout and highlighting */}
       <div className="bg-[#2d2d2d] overflow-x-auto">
         <pre className="!m-0 !p-5 !bg-transparent" style={{ margin: 0 }}>
           <code 
@@ -510,8 +530,8 @@ const CodeCanvas = ({ language, code }) => {
   );
 };
 
-// Simple Markdown Table Component
-const MarkdownTable = ({ content }) => {
+// Markdown Table Component - Now accepts a render function for cells
+const MarkdownTable = ({ content, renderCell }) => {
   const rows = content.trim().split('\n').filter(row => row.trim() !== '');
   if (rows.length < 2) return <div className="whitespace-pre-wrap">{content}</div>;
 
@@ -541,13 +561,13 @@ const MarkdownTable = ({ content }) => {
         </thead>
         <tbody>
           {bodyRows.map((row, i) => {
-            // Skip separator rows just in case
             if (row.match(/^[\s|:-]+$/)) return null;
             const cells = parseRow(row);
             return (
               <tr key={i}>
                 {cells.map((cell, j) => (
-                  <td key={j}>{cell}</td>
+                  // FIXED: Use renderCell function to support markdown inside tables
+                  <td key={j}>{renderCell ? renderCell(cell) : cell}</td>
                 ))}
               </tr>
             );
@@ -558,7 +578,7 @@ const MarkdownTable = ({ content }) => {
   );
 };
 
-// Input Area Component
+// Input Area Component - Fixed Auto Height
 const InputArea = ({ 
   input, 
   setInput, 
@@ -573,102 +593,114 @@ const InputArea = ({
   setShowModeMenu, 
   inputMode, 
   setInputMode, 
-  modeMenuRef,
+  modeMenuRef, 
   handleKeyDown
-}) => (
-  <div className={`
-    relative flex items-end gap-2 p-3 rounded-[32px] transition-all duration-300
-    glass-input w-full
-    ${isCentered ? 'shadow-lg' : ''}
-  `}>
-    <input 
-      type="file" 
-      ref={fileInputRef} 
-      className="hidden" 
-      onChange={handleFileUpload} 
-      accept="image/*"
-    />
-    <button 
-      onClick={() => fileInputRef.current?.click()}
-      className="p-2 text-gray-600 hover:bg-gray-100/50 rounded-full transition-colors mb-0.5 tooltip"
-      title="Upload image"
-    >
-      <ImageIcon className="w-6 h-6" />
-    </button>
+}) => {
+  
+  // FIXED: Auto-resize textarea
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto'; // Reset height
+      // Limit to approx 6 lines (line-height ~24px * 6 = 144px)
+      const newHeight = Math.min(inputRef.current.scrollHeight, 144);
+      inputRef.current.style.height = `${newHeight}px`;
+    }
+  }, [input, inputRef]);
 
-    <textarea
-      ref={inputRef}
-      value={input}
-      onChange={(e) => setInput(e.target.value)}
-      onKeyDown={handleKeyDown}
-      placeholder="Enter a prompt here"
-      className="w-full bg-transparent border-none outline-none resize-none text-base py-3 max-h-32 text-gray-800 placeholder-gray-500"
-      rows={1}
-      style={{ minHeight: '48px' }}
-    />
+  return (
+    <div className={`
+      relative flex items-end gap-2 p-3 rounded-[32px] transition-all duration-300
+      glass-input w-full
+      ${isCentered ? 'shadow-lg' : ''}
+    `}>
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        onChange={handleFileUpload} 
+        accept="image/*"
+      />
+      <button 
+        onClick={() => fileInputRef.current?.click()}
+        className="p-2 text-gray-600 hover:bg-gray-100/50 rounded-full transition-colors mb-0.5 tooltip"
+        title="Upload image"
+      >
+        <ImageIcon className="w-6 h-6" />
+      </button>
 
-    <div className="flex items-center gap-1 mb-0.5">
-      {input ? (
-         <button 
-          onClick={() => onSend()}
-          className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors animate-pop shadow-lg shadow-blue-500/30"
-        >
-          <Send className="w-5 h-5" />
-        </button>
-      ) : (
-        <div className="flex items-center gap-2">
-          <div className="relative" ref={modeMenuRef}>
-            <button 
-              onClick={() => setShowModeMenu(!showModeMenu)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-medium border border-transparent ${showModeMenu ? 'bg-white/60 shadow-sm border-white/40' : 'hover:bg-white/40 text-gray-600'}`}
-              title="Select Model"
-            >
-              <span className="text-gray-700">{inputMode}</span>
-              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showModeMenu ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {showModeMenu && (
-              <div className="absolute bottom-full left-0 mb-2 w-80 glass-menu rounded-2xl p-2 z-50 animate-pop shadow-xl flex flex-col">
-                <div className="px-3 py-2 border-b border-gray-100/50 mb-1">
-                  <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#4285F4] via-[#9B72CB] to-[#D96570]">Basile</span>
-                </div>
-                {[
-                  { id: 'Fast', desc: 'Answers quickly' },
-                  { id: 'Thinking', desc: 'Solving complex problems' },
-                  { id: 'Pro', desc: 'Thinks longer for advanced math & code' }
-                ].map((mode) => (
-                  <button
-                    key={mode.id}
-                    onClick={() => {
-                      setInputMode(mode.id);
-                      setShowModeMenu(false);
-                    }}
-                    className="flex items-center justify-between w-full p-3 hover:bg-white/60 rounded-xl text-left transition-colors group"
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-bold text-gray-800">{mode.id}</span>
-                      <span className="text-xs text-gray-500 font-light group-hover:text-gray-600">{mode.desc}</span>
-                    </div>
-                    {inputMode === mode.id && <Check className="w-4 h-4 text-blue-600" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+      <textarea
+        ref={inputRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Enter a prompt here"
+        className="w-full bg-transparent border-none outline-none resize-none text-base py-3 text-gray-800 placeholder-gray-500 overflow-y-auto"
+        rows={1}
+        style={{ minHeight: '48px', maxHeight: '144px' }}
+      />
 
-          <button 
-            onClick={toggleMic}
-            className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-gray-600 hover:bg-gray-100/50'}`}
+      <div className="flex items-center gap-1 mb-0.5">
+        {input ? (
+           <button 
+            onClick={() => onSend()}
+            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors animate-pop shadow-lg shadow-blue-500/30"
           >
-            <Mic className={`w-6 h-6 ${isListening ? 'animate-pulse' : ''}`} />
+            <Send className="w-5 h-5" />
           </button>
-        </div>
-      )}
-    </div>
-  </div>
-);
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={modeMenuRef}>
+              <button 
+                onClick={() => setShowModeMenu(!showModeMenu)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all text-sm font-medium border border-transparent ${showModeMenu ? 'bg-white/60 shadow-sm border-white/40' : 'hover:bg-white/40 text-gray-600'}`}
+                title="Select Model"
+              >
+                <span className="text-gray-700">{inputMode}</span>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showModeMenu ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showModeMenu && (
+                <div className="absolute bottom-full left-0 mb-2 w-80 glass-menu rounded-2xl p-2 z-50 animate-pop shadow-xl flex flex-col">
+                  <div className="px-3 py-2 border-b border-gray-100/50 mb-1">
+                    <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#4285F4] via-[#9B72CB] to-[#D96570]">Basile</span>
+                  </div>
+                  {[
+                    { id: 'Fast', desc: 'Answers quickly' },
+                    { id: 'Thinking', desc: 'Solving complex problems' },
+                    { id: 'Pro', desc: 'Thinks longer for advanced math & code' }
+                  ].map((mode) => (
+                    <button
+                      key={mode.id}
+                      onClick={() => {
+                        setInputMode(mode.id);
+                        setShowModeMenu(false);
+                      }}
+                      className="flex items-center justify-between w-full p-3 hover:bg-white/60 rounded-xl text-left transition-colors group"
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-bold text-gray-800">{mode.id}</span>
+                        <span className="text-xs text-gray-500 font-light group-hover:text-gray-600">{mode.desc}</span>
+                      </div>
+                      {inputMode === mode.id && <Check className="w-4 h-4 text-blue-600" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-// Settings Content
+            <button 
+              onClick={toggleMic}
+              className={`p-2 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600' : 'text-gray-600 hover:bg-gray-100/50'}`}
+            >
+              <Mic className={`w-6 h-6 ${isListening ? 'animate-pulse' : ''}`} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SettingsContent = () => {
   const [darkTheme, setDarkTheme] = useState(false);
   
@@ -820,8 +852,8 @@ const HelpContent = () => (
   </div>
 );
 
-// Sidebar Components
-const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
+// FIXED: SidebarItem now accepts isActive and uses onLoad properly with ID
+const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index, isActive }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(chat.title);
   const [showMenu, setShowMenu] = useState(false);
@@ -871,15 +903,21 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
         </form>
       ) : (
         <div 
-          onClick={() => onLoad(chat.title)}
-          className="w-full flex items-center justify-between hover:bg-white/40 px-4 py-2 rounded-full cursor-pointer transition-colors relative"
+          onClick={() => onLoad(chat.id, chat.title)}
+          className={`w-full flex items-center justify-between px-4 py-2 rounded-full cursor-pointer transition-all duration-200 relative
+            ${isActive 
+              ? 'bg-purple-100/30 shadow-sm border border-purple-100/50' // FIXED: Active state styling
+              : 'hover:bg-white/40'
+            }
+          `}
         >
           <div className="flex items-center gap-2 overflow-hidden flex-1">
-            <span className={`text-sm text-gray-700 truncate ${chat.pinned ? 'font-medium' : ''}`}>{chat.title}</span>
+            <span className={`text-sm truncate ${isActive ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
+              {chat.title}
+            </span>
             {chat.pinned && <Pin className="w-3.5 h-3.5 text-gray-400 fill-current shrink-0" />}
           </div>
 
-          {/* Hover Menu Trigger */}
           <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
@@ -891,7 +929,6 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
         </div>
       )}
 
-      {/* Dropdown Menu - Glass Style - High Layering */}
       {showMenu && !isEditing && (
         <div ref={menuRef} className="absolute right-0 top-8 z-50 w-36 glass-menu rounded-2xl shadow-2xl ring-1 ring-black/5 py-1 flex flex-col animate-fade-in">
            <button 
@@ -921,7 +958,8 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
   );
 };
 
-const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, chatHistory, setChatHistory }) => {
+// FIXED: Sidebar now accepts activeChatId and passes it down
+const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, chatHistory, setChatHistory, activeChatId }) => {
   const handlePin = (id) => {
     setChatHistory(prev => prev.map(chat => 
       chat.id === id ? { ...chat, pinned: !chat.pinned } : chat
@@ -976,7 +1014,8 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 py-4 no-scrollbar">
-          <div key={`recent-label-${isOpen}`} className={`text-xs font-medium text-gray-500 px-4 mb-2 ${isOpen ? 'animate-fade-in delay-200' : ''}`}>Recent</div>
+          {/* FIXED: Removed variable key to prevent flickering */}
+          <div key="recent-label" className={`text-xs font-medium text-gray-500 px-4 mb-2 ${isOpen ? 'animate-fade-in delay-200' : ''}`}>Recent</div>
           <div className="space-y-1 pb-10">
             {sortedChats.map((chat, idx) => (
               <SidebarItem 
@@ -987,6 +1026,7 @@ const Sidebar = ({ isOpen, toggleSidebar, onNewChat, onLoadRecent, onOpenModal, 
                 onPin={handlePin}
                 onDelete={handleDelete}
                 onRename={handleRename}
+                isActive={activeChatId === chat.id} // Pass active state
               />
             ))}
             {sortedChats.length === 0 && (
@@ -1065,11 +1105,44 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
     if (!disliked) onShowToast("Thanks for the feedback!");
   };
 
+  // Helper to parse Inline Formatting (Bold, Italic, Code, Math, Link)
+  // FIXED: Now supports recursion for nested elements (e.g. bold code)
+  const parseInline = (text) => {
+    // Regex splits: Math -> Code -> Link -> Bold -> Italic
+    const parts = text.split(/(\$[^$]+\$|`[^`]+`|\[.*?\]\(.*?\)|(\*\*|__).*?(\*\*|__)|\*.*?\*)/g);
+    
+    return parts.map((part, i) => {
+      if (!part) return null;
+
+      if (part.startsWith('$') && part.endsWith('$')) {
+        return <LatexRenderer key={i} content={part.slice(1, -1)} displayMode={false} />;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={i} className="bg-purple-50 text-purple-600 border border-purple-200 px-1.5 py-0.5 rounded text-sm font-mono">{part.slice(1, -1)}</code>;
+      }
+      if (part.startsWith('[') && part.includes('](')) {
+        const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+        if (match) {
+           return <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{match[1]}</a>;
+        }
+      }
+      if (part.startsWith('**') || part.startsWith('__')) {
+        // FIXED: Recursively parse content inside bold
+        return <strong key={i} className="font-bold text-gray-900">{parseInline(part.slice(2, -2))}</strong>;
+      }
+      if (part.startsWith('*')) {
+        // FIXED: Recursively parse content inside italic
+        return <em key={i} className="italic text-gray-800">{parseInline(part.slice(1, -1))}</em>;
+      }
+      
+      return part;
+    });
+  };
+
   const renderContent = (text) => {
     if (!text) return null;
 
     // Split text into segments: Code Blocks -> Math Blocks -> Text
-    // MODIFIED: Improved regex to better capture block latex including newlines
     const parts = text.split(/(```[\s\S]*?```|\$\$[\s\S]*?\$\$)/g);
 
     return parts.map((part, index) => {
@@ -1084,7 +1157,6 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
       }
       
       // 2. Math Blocks
-      // MODIFIED: Ensure clean trimming for latex block
       if (part.startsWith('$$') && part.endsWith('$$')) {
         const math = part.slice(2, -2).trim();
         return <LatexRenderer key={index} content={math} displayMode={true} />;
@@ -1117,7 +1189,13 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
         return; // Skip rest of loop
       } else if (inTable) {
         // Flush table
-        elements.push(<MarkdownTable key={`${parentIndex}-table-${lineIdx}`} content={currentTableBuffer.join('\n')} />);
+        elements.push(
+          <MarkdownTable 
+            key={`${parentIndex}-table-${lineIdx}`} 
+            content={currentTableBuffer.join('\n')} 
+            renderCell={parseInline} // Pass parseInline to table
+          />
+        );
         currentTableBuffer = [];
         inTable = false;
       }
@@ -1170,43 +1248,16 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
 
     // Flush remaining table
     if (currentTableBuffer.length > 0) {
-      elements.push(<MarkdownTable key={`${parentIndex}-table-end`} content={currentTableBuffer.join('\n')} />);
+      elements.push(
+        <MarkdownTable 
+          key={`${parentIndex}-table-end`} 
+          content={currentTableBuffer.join('\n')} 
+          renderCell={parseInline}
+        />
+      );
     }
 
     return <div key={`text-${parentIndex}`}>{elements}</div>;
-  };
-
-  // Helper to parse Inline Formatting (Bold, Italic, Code, Math, Link)
-  const parseInline = (text) => {
-    // Split by Math ($...$) -> Code (`...`) -> Link ([...](...)) -> Bold (**...**) -> Italic (*...*)
-    // Note: Regex split captures delimiters if grouped ()
-    const parts = text.split(/(\$[^$]+\$|`[^`]+`|\[.*?\]\(.*?\)|(\*\*|__).*?(\*\*|__)|\*.*?\*)/g);
-    
-    return parts.map((part, i) => {
-      if (!part) return null;
-
-      if (part.startsWith('$') && part.endsWith('$')) {
-        return <LatexRenderer key={i} content={part.slice(1, -1)} displayMode={false} />;
-      }
-      if (part.startsWith('`') && part.endsWith('`')) {
-        // MODIFIED: Inline code is now purple
-        return <code key={i} className="bg-purple-50 text-purple-600 border border-purple-200 px-1.5 py-0.5 rounded text-sm font-mono">{part.slice(1, -1)}</code>;
-      }
-      if (part.startsWith('[') && part.includes('](')) {
-        const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
-        if (match) {
-           return <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{match[1]}</a>;
-        }
-      }
-      if (part.startsWith('**') || part.startsWith('__')) {
-        return <strong key={i} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
-      }
-      if (part.startsWith('*')) {
-        return <em key={i} className="italic text-gray-800">{part.slice(1, -1)}</em>;
-      }
-      
-      return part;
-    });
   };
 
   return (
@@ -1271,6 +1322,8 @@ export default function App() {
   const [conversationId, setConversationId] = useState(0); 
   const [inputMode, setInputMode] = useState('Fast');
   const [showModeMenu, setShowModeMenu] = useState(false);
+  // FIXED: Add state for active chat
+  const [activeChatId, setActiveChatId] = useState(null);
   
   const [chatHistory, setChatHistory] = useState([
     { id: 1, title: "React UI Design Patterns", pinned: false },
@@ -1424,12 +1477,16 @@ export default function App() {
     setIsTyping(false);
     setInput('');
     setConversationId(Date.now());
+    // FIXED: Clear active selection on new chat
+    setActiveChatId(null);
     if (window.innerWidth < 1024) setIsSidebarOpen(false);
   };
 
-  const handleLoadRecent = (topic) => {
+  const handleLoadRecent = (id, topic) => {
     setIsTyping(false);
     setConversationId(Date.now());
+    // FIXED: Set active chat ID
+    setActiveChatId(id);
     setMessages([
       { id: 1, role: 'user', content: `Show me ${topic} features` },
       { id: 2, role: 'ai', content: `Here is a demo of the new rendering capabilities:\n\n### 1. Math Formulas (LaTeX)\n\nInline: $E = mc^2$\nBlock:\n$$\n\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$\n\n### 2. Code with Highlighting\n\n\`\`\`python\ndef hello_world():\n    print("Hello from PrismJS!")\n    return True\n\`\`\`\n\n### 3. Task Lists\n\n- [x] Implement Markdown\n- [x] Add Syntax Highlighting\n- [ ] Create World Peace\n\n> "This is a blockquote to show off the styling."\n\nCheck the **source code** for implementation details!` }
@@ -1489,6 +1546,7 @@ export default function App() {
         onOpenModal={setActiveModal}
         chatHistory={chatHistory}
         setChatHistory={setChatHistory}
+        activeChatId={activeChatId} // FIXED: Pass active ID
       />
 
       <div className="flex-1 flex flex-col h-full relative z-10">
