@@ -693,42 +693,65 @@ export default function App() {
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const responseTemplates = [
-        "That's an interesting topic! Here's a quick summary:\n\n1. **Concept**: It involves strict adherence to design principles.\n2. **Application**: Used widely in modern web apps.\n3. **Benefit**: Improves user engagement significantly.\n\nWould you like more details?",
-        "I can certainly help with that. Based on your request, I've analyzed the patterns and found that using a mesh gradient background significantly enhances the visual appeal without adding clutter.",
-        "Here is the code snippet you asked for:\n\n```javascript\nconst hello = 'world';\nconsole.log(hello);\n```\n\nLet me know if you need any changes!",
-        "Understood. I've updated the context to reflect your new requirements."
+    // Call Gemini API
+    try {
+      const apiKey = ""; // Will be injected by runtime
+      
+      // Prepare messages for context, mapping internal role to API role
+      const history = messages.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      }));
+
+      // Add current message to the payload
+      const apiContents = [
+        ...history,
+        { role: 'user', parts: [{ text: text }] }
       ];
-      
-      const randomResponse = responseTemplates[Math.floor(Math.random() * responseTemplates.length)];
-      
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: apiContents,
+            // You can add system instructions here if needed
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
+
       const aiMsg = {
         id: Date.now() + 1,
         role: 'ai',
-        content: ''
+        content: aiResponseText
       };
       
       setMessages(prev => [...prev, aiMsg]);
 
-      let i = 0;
-      const typeWriter = setInterval(() => {
-        if (i < randomResponse.length) {
-          setMessages(prev => {
-            const newMessages = [...prev];
-            const lastMsg = newMessages[newMessages.length - 1];
-            if (lastMsg.role === 'ai') {
-                lastMsg.content = randomResponse.substring(0, i + 1);
-            }
-            return newMessages;
-          });
-          i++;
-        } else {
-          clearInterval(typeWriter);
-          setIsTyping(false);
-        }
-      }, 15);
-    }, 800);
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      showToast("Error connecting to Gemini API");
+      
+      // Add error message to chat for visibility
+      const errorMsg = {
+        id: Date.now() + 1,
+        role: 'ai',
+        content: "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later."
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleKeyDown = (e) => {
