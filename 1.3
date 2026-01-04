@@ -37,7 +37,8 @@ import {
   FileQuestion,
   Info,
   Zap,
-  ChevronDown
+  ChevronDown,
+  Terminal // Added for generic code icon
 } from 'lucide-react';
 
 // Custom CSS for animations and gradients
@@ -244,6 +245,12 @@ const customStyles = `
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.4);
   }
+  
+  .glass-code-header {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  }
 `;
 
 // Toast Notification Component
@@ -286,6 +293,47 @@ const Modal = ({ isOpen, onClose, title, children, isClosing }) => {
         <div className="max-h-[60vh] overflow-y-auto no-scrollbar">
           {children}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// NEW: Code Canvas Panel Component
+const CodeCanvas = ({ language, code }) => {
+  const [copied, setCopied] = useState(false);
+  
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="my-4 rounded-xl overflow-hidden glass-card border border-white/40 shadow-sm group animate-pop">
+      <div className="flex items-center justify-between px-4 py-2 glass-code-header">
+        <div className="flex items-center gap-2">
+          <Terminal className="w-4 h-4 text-gray-500" />
+          <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{language || 'Code'}</span>
+        </div>
+        <button 
+          onClick={handleCopy} 
+          className="flex items-center gap-1.5 px-2 py-1 hover:bg-white/50 rounded-md transition-colors text-xs font-medium text-gray-600"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-green-600" />
+              <span className="text-green-600">Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+      <div className="p-4 bg-gray-50/50 overflow-x-auto">
+        <code className="text-sm font-mono text-gray-800 whitespace-pre">{code}</code>
       </div>
     </div>
   );
@@ -664,14 +712,14 @@ const UserMessage = ({ content, delay = 0 }) => (
   </div>
 );
 
-// Updated AIMessage with slide-in from left
+// Updated AIMessage with Canvas Parsing for Code Blocks
 const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
 
   const handleCopy = () => {
     try {
-      // Use document.execCommand for iframe compatibility
+      // Create a textarea element to copy the content
       const textArea = document.createElement("textarea");
       textArea.value = content;
       document.body.appendChild(textArea);
@@ -696,6 +744,46 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
     if (!disliked) onShowToast("Thanks for the feedback!");
   };
 
+  // Helper function to render formatted content
+  const renderContent = (text) => {
+    if (!text) return null;
+    
+    // Split by code blocks or horizontal rules
+    // Capture group keeps the delimiters in the output array
+    // Regex logic: 
+    // 1. ```...``` code blocks
+    // 2. --- horizontal rules
+    const parts = text.split(/(```[\s\S]*?```|^\s*---\s*$)/gm);
+    
+    return parts.map((part, index) => {
+      // Handle Code Blocks
+      if (part.startsWith('```') && part.endsWith('```')) {
+        // Extract language and code content
+        // Match ```language\n code ``` or just ```\n code ```
+        const match = part.match(/^```(\w+)?\n([\s\S]*?)```$/);
+        if (match) {
+          const language = match[1] || 'text';
+          const code = match[2];
+          return <CodeCanvas key={index} language={language} code={code} />;
+        }
+      }
+      
+      // Handle Horizontal Rule
+      if (part.trim() === '---') {
+        return <div key={index} className="h-px bg-gray-300/50 my-4" />;
+      }
+
+      // Handle Regular Text (trimmed slightly to avoid excessive newlines around blocks)
+      if (part.trim() === '') return null;
+
+      return (
+        <span key={index} className="whitespace-pre-wrap">
+          {part}
+        </span>
+      );
+    });
+  };
+
   return (
     <div 
       className="flex items-start space-x-4 mb-8 group animate-message-slide-in"
@@ -706,10 +794,12 @@ const AIMessage = ({ content, isTyping, onShowToast, delay = 0 }) => {
           <Sparkles className="w-5 h-5 text-white animate-pulse" />
         </div>
       </div>
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 space-y-2 min-w-0">
         <div className="font-medium text-sm text-gray-900">Gemini</div>
-        <div className="prose prose-slate max-w-none text-[#1F1F1F] leading-7 fade-in-text whitespace-pre-wrap">
-          {content}
+        
+        {/* Render Formatted Content */}
+        <div className="prose prose-slate max-w-none text-[#1F1F1F] leading-7 fade-in-text">
+          {renderContent(content)}
           {isTyping && <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse"></span>}
         </div>
         
