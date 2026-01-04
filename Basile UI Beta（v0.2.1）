@@ -292,37 +292,65 @@ const customStyles = `
   }
 
   /* --- DARK MODE GLASS OVERRIDES --- */
-  .dark .glass { background: rgba(17, 25, 40, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); }
-  .dark .glass-darker { background: rgba(13, 17, 23, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); }
-  .dark .glass-header { background: rgba(13, 17, 23, 0.7); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-  .dark .glass-sidebar { background: rgba(13, 17, 23, 0.6); border-right: 1px solid rgba(255, 255, 255, 0.08); }
-  .dark .glass-card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); }
-  .dark .glass-card:hover { background: rgba(30, 41, 59, 0.6); }
-  .dark .glass-input { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); }
-  .dark .glass-pill { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); }
-  .dark .glass-pill:hover { background: rgba(30, 41, 59, 0.8); }
-  .dark .glass-menu { background: rgba(17, 25, 40, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1); }
-  .dark .glass-code-header { background: rgba(30, 41, 59, 0.5); border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-  .dark .glass-bubble-user { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.1); color: #e2e8f0; }
+  /* Requirement 1: Main BG #131117 (Applied in JSX) */
+  /* Requirement 2 & 3: Sidebar & Input #1e1c22 */
   
-  /* Background Blob Adjustment for Dark Mode */
-  .dark .animate-blob { mix-blend-mode: screen; opacity: 0.2; }
+  .dark .glass-sidebar { 
+    background: rgba(30, 28, 34, 0.75); /* Matches ~#1e1c22 with transparency */
+    background: #1e1c22; /* Fallback/Base */
+    border-right: 1px solid rgba(255, 255, 255, 0.06); 
+  }
+  
+  .dark .glass-input { 
+    background: rgba(30, 28, 34, 0.85); /* Matches ~#1e1c22 */
+    background: #1e1c22;
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
 
-  /* Dark Mode Text Colors (Manually overriding standard Tailwind classes when inside .dark) */
-  .dark { color: #e2e8f0; }
-  .dark .text-gray-900 { color: #f1f5f9; }
-  .dark .text-gray-800 { color: #e2e8f0; }
-  .dark .text-gray-700 { color: #cbd5e1; }
-  .dark .text-gray-600 { color: #94a3b8; }
-  .dark .text-gray-500 { color: #64748b; }
-  .dark .text-gray-400 { color: #475569; }
-  .dark .bg-gray-50\/50 { background-color: rgba(17, 25, 40, 0.5); }
-  .dark .hover\:bg-white\/40:hover { background-color: rgba(255, 255, 255, 0.05); }
-  .dark .hover\:bg-white\/50:hover { background-color: rgba(255, 255, 255, 0.08); }
-  .dark .hover\:bg-white\/60:hover { background-color: rgba(255, 255, 255, 0.1); }
-  .dark .hover\:bg-gray-100\/50:hover { background-color: rgba(255, 255, 255, 0.05); }
-  .dark input, .dark textarea { color: #f1f5f9; }
-  .dark input::placeholder, .dark textarea::placeholder { color: #64748b; }
+  /* Requirement 4: Bubble/Hover uses Light Purple */
+  .dark .glass-bubble-user { 
+    background: rgba(147, 51, 234, 0.15); /* Light Purple Tint */
+    border: 1px solid rgba(168, 85, 247, 0.2); 
+    color: #e3e3e3; 
+  }
+  
+  /* Generic dark glass adjustments */
+  .dark .glass { background: rgba(30, 28, 34, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); }
+  .dark .glass-darker { background: #131117; border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); }
+  .dark .glass-header { background: rgba(19, 17, 23, 0.8); border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+  .dark .glass-card { background: rgba(30, 41, 59, 0.2); border: 1px solid rgba(255, 255, 255, 0.06); }
+  .dark .glass-card:hover { background: rgba(30, 41, 59, 0.4); }
+  
+  .dark .glass-pill { background: rgba(30, 28, 34, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); }
+  .dark .glass-pill:hover { background: rgba(147, 51, 234, 0.15); border-color: rgba(168, 85, 247, 0.3); } /* Light purple hover */
+  
+  .dark .glass-menu { background: #1e1c22; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); }
+  .dark .glass-code-header { background: rgba(30, 28, 34, 0.5); border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+  
+  /* Requirement 4: Hover States Light Purple */
+  .dark .hover\:bg-white\/10:hover { background-color: rgba(168, 85, 247, 0.1); } /* Light purple hover */
+  .dark .hover\:bg-white\/20:hover { background-color: rgba(168, 85, 247, 0.15); }
+  .dark .hover\:bg-white\/40:hover { background-color: rgba(168, 85, 247, 0.1); }
+  .dark .hover\:bg-white\/50:hover { background-color: rgba(168, 85, 247, 0.15); }
+  .dark .hover\:bg-gray-100\/50:hover { background-color: rgba(168, 85, 247, 0.1); }
+
+  /* Background Blob Adjustment for Dark Mode */
+  .dark .animate-blob { mix-blend-mode: screen; opacity: 0.15; filter: blur(80px); }
+
+  /* Requirement 5 & 6: Text Colors */
+  .dark { color: #e3e3e3; }
+  .dark .text-gray-900 { color: #e3e3e3; } /* Main Text */
+  .dark .text-gray-800 { color: #e3e3e3; }
+  .dark .text-gray-700 { color: #c4c7c5; } /* Secondary Text */
+  .dark .text-gray-600 { color: #c4c7c5; }
+  .dark .text-gray-500 { color: #9ca3af; } /* Tertiary/Disabled */
+  .dark .text-gray-400 { color: #9ca3af; }
+  .dark .text-blue-600 { color: #a78bfa; } /* Adjust blue links to light purple/blue in dark mode */
+
+  /* Input Placeholder */
+  .dark input, .dark textarea { color: #e3e3e3; }
+  .dark input::placeholder, .dark textarea::placeholder { color: #8e918f; }
   
   /* Table Styles */
   .markdown-table {
@@ -341,7 +369,7 @@ const customStyles = `
     padding: 12px;
     border-bottom: 2px solid rgba(0,0,0,0.1);
   }
-  .dark .markdown-table th { background-color: rgba(30, 41, 59, 0.5); border-bottom: 2px solid rgba(255,255,255,0.05); }
+  .dark .markdown-table th { background-color: rgba(30, 28, 34, 0.8); border-bottom: 2px solid rgba(255,255,255,0.05); }
   .markdown-table td {
     padding: 12px;
     border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -353,7 +381,7 @@ const customStyles = `
   .markdown-table tr:hover {
     background-color: rgba(255,255,255,0.4);
   }
-  .dark .markdown-table tr:hover { background-color: rgba(255,255,255,0.05); }
+  .dark .markdown-table tr:hover { background-color: rgba(168, 85, 247, 0.05); }
 
   /* Markdown & Latex Styles */
   .markdown-blockquote {
@@ -366,7 +394,7 @@ const customStyles = `
     padding: 0.5rem 1rem;
     border-radius: 0 8px 8px 0;
   }
-  .dark .markdown-blockquote { color: #cbd5e1; background: rgba(192, 132, 252, 0.05); }
+  .dark .markdown-blockquote { color: #c4c7c5; background: rgba(147, 51, 234, 0.1); border-left-color: #a78bfa; }
   
   .task-list-item {
     display: flex;
@@ -377,7 +405,7 @@ const customStyles = `
 
   /* Katex Font Fixes if CDN fails */
   .katex { font-size: 1.1em; }
-  .dark .katex { color: #e2e8f0; }
+  .dark .katex { color: #e3e3e3; }
   
   /* Make display math centered and scrollable if needed */
   .katex-display {
@@ -1591,7 +1619,7 @@ export default function App() {
   };
 
   return (
-    <div className={`relative flex h-screen font-sans overflow-hidden text-[#1F1F1F] selection:bg-[#c2dbfe] selection:text-[#0b57d0] bg-[#F8F9FA] dark:bg-[#0f172a] transition-colors duration-500 ${darkTheme ? 'dark' : ''}`}>
+    <div className={`relative flex h-screen font-sans overflow-hidden text-[#1F1F1F] selection:bg-[#c2dbfe] selection:text-[#0b57d0] bg-[#F8F9FA] dark:bg-[#131117] transition-colors duration-500 ${darkTheme ? 'dark' : ''}`}>
       <style>{customStyles}</style>
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-40">
@@ -1723,7 +1751,7 @@ export default function App() {
         </div>
 
         {messages.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 pt-10 pb-6 bg-gradient-to-t from-[#F8F9FA]/80 via-[#F8F9FA]/40 to-transparent dark:from-[#0f172a]/90 dark:via-[#0f172a]/60 pointer-events-none animate-fade-in">
+          <div className="absolute bottom-0 left-0 right-0 pt-10 pb-6 bg-gradient-to-t from-[#F8F9FA]/80 via-[#F8F9FA]/40 to-transparent dark:from-[#131117]/90 dark:via-[#131117]/60 pointer-events-none animate-fade-in">
             <div className="max-w-[800px] mx-auto px-4 pointer-events-auto">
               <InputArea 
                 input={input}
