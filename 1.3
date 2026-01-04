@@ -266,7 +266,8 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
 
   return (
     <div 
-      className="relative group animate-slide-in-left"
+      // Updated: Added conditional z-index to fix overlapping menu issue
+      className={`relative group animate-slide-in-left ${showMenu ? 'z-50' : 'z-auto'}`}
       style={{ animationDelay: `${(index + 1) * 50}ms` }}
     >
       {isEditing ? (
@@ -286,7 +287,7 @@ const SidebarItem = ({ chat, onLoad, onPin, onRename, onDelete, index }) => {
           className="w-full flex items-center justify-between hover:bg-[#E0E4E9] px-4 py-2 rounded-full cursor-pointer transition-colors relative"
         >
           <div className="flex items-center space-x-3 overflow-hidden">
-            <MessageSquare className={`w-4 h-4 shrink-0 ${chat.pinned ? 'text-blue-600 fill-current' : 'text-gray-500'}`} />
+            {/* Removed MessageSquare icon here as requested */}
             <span className={`text-sm text-gray-700 truncate ${chat.pinned ? 'font-medium' : ''}`}>{chat.title}</span>
           </div>
 
